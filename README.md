@@ -26,14 +26,14 @@
    File tersebut merupakan konfigurasi fundamental yang dimuat ketika aplikasi web dijalankan.
    
    2.1 Konfigurasi database
-      `...`
-      `'db' => [`
-    	    `'name' => 'nama_database',`
-    	    `'host' => 'host db server, default: localhost',`
-    	    `'user' => 'username akun',`
-    	    `'pass' => 'password akun'`
-      `],`
-      `...`
+      `...
+      'db' => [
+    	    'name' => 'nama_database',
+    	    'host' => 'host db server, default: localhost',
+    	    'user' => 'username akun',
+    	    'pass' => 'password akun'
+      ],
+      ...`
       
    2.2 Daftarkan contoller atau user defined class
        Perlu diketahui bahwa class di daftarkan dengan full path
@@ -81,6 +81,7 @@
         }, '[alias: optional]');
         
    Contoh:
+
    $this->router->map('GET|POST', '/index.php/login', function () {
             Controller::login();
         }, 'login');
