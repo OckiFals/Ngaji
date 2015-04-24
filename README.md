@@ -14,45 +14,45 @@
 
   NB: tidak disarankan untuk performa, sebisa mungkin daftarkan class pada settings.php
 
-Manual penggunaan:
+# Manual penggunaan:
 
 1. Definisikan web-app path
    contoh: asumsikan url path untuk project adalah http://ockifals.dev/bisangaji
    maka ubah definisi app root pada index.php menjadi:
    
-   define('HOSTNAME', '/bisangaji');
+   `define('HOSTNAME', '/bisangaji');`
    
 2. Ubah dan sesuaikan konfigurasi pada App/setting.php
    File tersebut merupakan konfigurasi fundamental yang dimuat ketika aplikasi web dijalankan.
    
    2.1 Konfigurasi database
-      ...
-      'db' => [
-    	    'name' => 'nama_database',
-    	    'host' => 'host db server, default: localhost',
-    	    'user' => 'username akun',
-    	    'pass' => 'password akun'
-      ],
-      ...
+      `...`
+      `'db' => [`
+    	    `'name' => 'nama_database',`
+    	    `'host' => 'host db server, default: localhost',`
+    	    `'user' => 'username akun',`
+    	    `'pass' => 'password akun'`
+      `],`
+      `...`
       
    2.2 Daftarkan contoller atau user defined class
        Perlu diketahui bahwa class di daftarkan dengan full path
        
-       'class' => [
+       `'class' => [
            'Ngaji/Routing/Route.php',
            'app/Controllers/UstadzController.php'
            ...
-           
+           `
    2.3 Daftarkan model
        Model didaftarkan tanpa full path, tambahkan hanya nama filenya saja.
        
        Misal terdapat model Ustadz di /app/models/Ustadz.php. 
        Untuk mendaftarkannya, tidak perlu menuliskan '/app/models/Ustadz.php' cukup hanya 'Ustadz'
-       
+       `
        'models' => [
            'Ustadz',
            ...
-           
+           `
        Ketika model digunakan pada contoller, jangan lupa untuk memanggil model tersebut pada App namespace.
        
        contoh:
