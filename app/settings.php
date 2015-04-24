@@ -24,11 +24,11 @@ return [
     ],
     # database configuration
     'db' => [
-        'driver' => 'mysql',
+        'driver' => 'sqlite', # replace it with mysql
         'name' => 'manajemen_resto',
-        'host' => 'localhost',
-        'user' => 'ockifals',
-        'pass' => 'admin'
+        'host' => '../../db.sqlite3',
+        'user' => '',
+        'pass' => ''
     ],
     # register your model class in here
     'models' => [
