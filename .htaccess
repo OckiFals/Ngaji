@@ -1,0 +1,17 @@
+RewriteEngine On
+Options -Indexes
+
+RewriteRule ^beranda/?$ index.php [NC,L]
+RewriteRule ^login/?$ index.php?r=login [QSA,L]
+RewriteRule ^profile/?$ index.php?r=profile [QSA,L]
+RewriteRule ^logout/?$ index.php?r=/auth/logout [QSA,L]
+RewriteRule ^menu/([A-Za-z0-9-]+)/?$ index.php?menu=$1 [QSA,L]
+RewriteRule ^search/?$ index.php/search/?query=$1 [QSA,L]
+
+# RewriteCond $1 !^(index\.php|images|robots\.txt)
+# RewriteRule ^(.*)$ /index.php/$1 [L]
+
+# waitress rule
+RewriteRule ^add-order/?$ index.php?r=add-order [QSA,L]
+
+RewriteRule ^rahasia-perusahaan/?$ index.php?r=a7d062c431dd5ea0994d59ce5197fc07 [QSA,L]

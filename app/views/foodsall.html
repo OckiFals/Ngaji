@@ -1,0 +1,104 @@
+{% extends  "base.html" %}
+
+{% load locale_id %} {# load module that format price into rupiah format #}
+
+{% block breadchumb %}
+    <li><a href="{% url 'home' %}"><i class="fa fa-dashboard"></i> Home</a></li>
+{% endblock %}
+
+{% block content %}
+
+    <div class="box box-default">
+        <div class="box-header with-border">
+            <h3 class="box-title">Foods</h3>
+
+            <div class="box-tools pull-right">
+                <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            </div>
+            <!-- /.box-tools -->
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="display: block;">
+            <!-- /.box-header -->
+            <div class="box-body table-responsive no-padding">
+                {# TODO fix the buttons position#}
+                <button type="submit" class="btn btn-flat full-right">
+                    <a href="{% url 'add-food' %}">Add Food</a>
+                </button>
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    {{ formset.management_form }}
+                    {% comment %}{% if forms.errors %}
+                        <p>Please correct the following field:</p>
+                    {% endif %}{% endcomment %}
+                    <table class="table table-hover table-responsive">
+                        <tbody>
+                        <tr>
+                            <th width=40>#</th>
+                            <th>Name</th>
+                            <th>Popularity</th>
+                            <th>Locality</th>
+                            <th>Price</th>
+                            <th colspan="1">Order</th>
+                        </tr>
+                        {% for food in foods %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <label for="id_form-{{ forloop.counter0 }}-name">
+                                        <input id="id_form-{{ forloop.counter0 }}-name"
+                                               name="form-{{ forloop.counter0 }}-name" type="text"
+                                               class="form-control"
+                                               value="{{ food.name }}" disabled/>
+                                    </label>
+                                </td>
+                                <td>-</td>
+                                <td><span class="label label-success">{{ food.get_locality_display }}</span>
+                                </td>
+                                <td>{% format_rupiah food.price %}</td>
+                                <td>
+                                    <label for="id_form-{{ forloop.counter0 }}-extras">
+                                        <input id="id_form-{{ forloop.counter0 }}-extras" class="form-control col-xs-4"
+                                               name="form-{{ forloop.counter0 }}-extras" placeholder="Extras"
+                                               type="text"/>
+                                    </label>
+
+                                    <label for="id_form-{{ forloop.counter0 }}-qty">
+                                        <input id="id_form-{{ forloop.counter0 }}-qty" max="10" min="0"
+                                               class="form-control  col-xs-2" name="form-{{ forloop.counter0 }}-qty"
+                                               type="number" value="0"/>
+                                    </label>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="input pull-right">
+                        <button type="submit" class="btn btn-block btn-flat">Add</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.box-body -->
+
+        </div>
+        <!-- /.box-body -->
+    </div>
+
+    <div class="box box-default">
+        <div class="box-header with-border">
+            <h3 class="box-title">Drinks</h3>
+
+            <div class="box-tools pull-right">
+                <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            </div>
+            <!-- /.box-tools -->
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="display: block;">
+            None
+        </div>
+        <!-- /.box-body -->
+    </div>
+
+{% endblock %}
+
