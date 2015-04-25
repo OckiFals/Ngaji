@@ -27,12 +27,6 @@ class ApplicationController extends Controller {
         if (Request::is_authenticated()) {
             if (Request::is_manager()) {
                 ManagerController::index();
-            } else if (Request::is_chef()) {
-                ChefController::index();
-            } else if (Request::is_waitress()) {
-                WaitressController::index();
-            } else {
-                CashierController::index();
             }
         } else {
             self::login();
