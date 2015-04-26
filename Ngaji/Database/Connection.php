@@ -28,11 +28,11 @@ class Connection {
         # One connection through whole application
         if (null == self::$cont) {
             try {
-		if ('mysql' === self::$dbDriver) {
-		    self::$cont = new PDO("'sqlite:" . self::$dbName . "'");
-                } else if ('sqlite' === self::$dbDriver) {
-		    self::$cont = new PDO("mysql:host=" . self::$dbHost . ";" . "dbname=" .
-		      self::$dbName, self::$dbUsername, self::$dbUserPassword);
+				if ('mysql' === self::$dbDriver) {
+				    self::$cont = new PDO("mysql:host=" . self::$dbHost . ";" . "dbname=" .
+				      self::$dbName, self::$dbUsername, self::$dbUserPassword);
+		        } else if ('sqlite' === self::$dbDriver) {
+				    self::$cont = new PDO("sqlite:" . self::$dbName );
                 }
             } catch (PDOException $e) {
                 die($e->getMessage());
