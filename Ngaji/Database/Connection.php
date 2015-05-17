@@ -4,9 +4,9 @@ use PDO;
 use PDOException;
 
 class Connection {
-    private static $dbDriver;
-    private static $dbName;
-    private static $dbHost;
+    protected static $dbDriver;
+    protected static $dbName;
+    protected static $dbHost;
     private static $dbUsername;
     private static $dbUserPassword;
 
@@ -28,12 +28,8 @@ class Connection {
         # One connection through whole application
         if (null == self::$cont) {
             try {
-		if ('mysql' === self::$dbDriver) {
-		    self::$cont = new PDO("'sqlite:" . self::$dbName . "'");
-                } else if ('sqlite' === self::$dbDriver) {
-		    self::$cont = new PDO("mysql:host=" . self::$dbHost . ";" . "dbname=" .
-		      self::$dbName, self::$dbUsername, self::$dbUserPassword);
-                }
+                self::$cont = new PDO("mysql:host=" . self::$dbHost . ";" . "dbname=" .
+                    self::$dbName, self::$dbUsername, self::$dbUserPassword);
             } catch (PDOException $e) {
                 die($e->getMessage());
             }

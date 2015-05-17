@@ -11,6 +11,7 @@
 
 use Ngaji\Database\Connection;
 use Ngaji\Routing\Route;
+use Ngaji\Routing\Route2;
 use Ngaji\Routing\Router2;
 
 
@@ -46,34 +47,13 @@ class bootstrap2 {
         Connection::setConfig($this->config['db']);
 
         # make a route
-        $router = new Route($this->config);
+        $router = new Route2($this->config);
 
-        # TODO use pregex to handle client request
-        # router2
-        // $router2 = new Router2($this->config);
-
-        # match the current request
-        $match = $router->getRoute()->match();
-        if ($match && is_callable($match['target'])) {
-            call_user_func_array($match['target'], $match['params']);
-        } else {
-            # no route was matched
-            header($_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found');
-            echo "<h3>No Route was matched with</h3>";
-            echo "<table>";
-            echo "<tr>";
-            echo "<th>Method</th>";
-            echo "<th>Route</th>";
-            echo "</tr>";
-            // echo "<td>Controller</td>";
-            foreach ($router->getRoute()->getRoutes() as $route) {
-                print("<tr>");
-                print("<td> $route[0] </td>");
-                print("<td> $route[1] </td>");
-                print("<tr>");
-            }
-            echo "</table>";
-        }
+        call_user_func_array(
+            $router->router->getController() . '::' . $router->router->getMethod() , [
+                $router->router->getParam()
+            ]
+        );
     }
 
     public function loadClasses() {
@@ -89,7 +69,7 @@ class bootstrap2 {
                 if (file_exists($class))
                     require("$class");
                 else
-                    throw new Exception('Class ' . $class . ' not found!');
+                    throw new Exception('Class ' . $class . ' not found! Check your settings.php');
             }
 
             # load models

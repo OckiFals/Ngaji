@@ -27,4 +27,8 @@ class YourModel extends ActiveRecord {
             'foto' => 'varchar_100'
         );
     }
+
+    public function rules() {
+        // TODO: Implement rules() method.
+    }
 }

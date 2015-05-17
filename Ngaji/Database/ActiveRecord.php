@@ -1,5 +1,6 @@
 <?php namespace Ngaji\Database;
 
+use Ngaji\Http\Response;
 use PDO;
 use PDOStatement;
 
@@ -9,28 +10,27 @@ use PDOStatement;
  * @author Ocki Bagus Pratama
  * @since 1.0
  */
-abstract class ActiveRecord extends Connection {
-    var $classModel = [];
+abstract class ActiveRecord extends Model {
+    var $classModel;
 
-    public function __construct() {
-        /* FIXME */
+    public function __construct($datamodel = []) {
+        parent::__construct($datamodel);
     }
-
-    /**
-     * Name of the specifict table
-     * Child must override this function
-     * and return String: table name on the database
-     * @return mixed
-     */
-    public abstract function tableName();
-
-    public abstract function attributes();
 
     /**
      * Save the new object models
      */
     public function save() {
+        $sql = sprintf("INSERT INTO `%s`.`%s` (%s) VALUES (%s)",
+            self::$dbName,
+            static::tableName(),
+            implode(', ', array_keys(static::attributes())),
+            'NULL, :id, :post, now(), CURRENT_TIMESTAMP'
+        );
 
+        die($sql);
+
+        self::query($sql);
     }
 
     /**
@@ -45,19 +45,26 @@ abstract class ActiveRecord extends Connection {
     /**
      * Is the model has Primary Key?
      * @return mixed
-     */ 
+     */
     public static function has_PK() {
-        $attrs = static::attributes();
-        foreach ($attrs as $attr => $value) {
-            if (is_array($value))
-                $found = in_array('primary_key', $value);
-            else
-                continue; 
-            //     $found = strcmp('primary_key', $value);
-            
-            if ($found) return $attr;
-        }
-        return false;
+        $attrs = static::rules();
+
+        if (array_key_exists('primary_key', $attrs))
+            return $attrs['primary_key'];
+        else
+            return false;
+    }
+
+    /**
+     * Is the model has relations?
+     */
+    public static function hasRelations() {
+        $attrs = static::rules();
+
+        if (array_key_exists('belongs_to', $attrs))
+            return $attrs['belongs_to'];
+        else
+            return null;
     }
 
 
@@ -66,23 +73,27 @@ abstract class ActiveRecord extends Connection {
      * @return PDOStatement: fetchAll query
      */
     public static function all() {
-        $pdo = parent::connect();
 
+        # TODO
+        if (self::hasRelations())
+            $sql = self::makeRelations();
+        else
+            $sql = (new QueryBuilder)->select()->from(static::tableName());
 
-        $sql = "SELECT * FROM " . static::tableName();
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        parent::disconnect();
-        return $pdo->query($sql);
+        return self::query($sql);
     }
 
     /**
-     * TODO tambahkan spesifik kalusa LIKE
      * @param $param : the array('table-name' => 'value')
+     * @param bool $action
      * @return mixed
      */
-    public static function find($param) {
-        $command = "SELECT * FROM " . static::tableName();
+    public static function find($param, $action=false) {
+
+        if (static::hasRelations())
+            $command = self::makeRelations();
+        else
+            $command = (new QueryBuilder)->select()->from(static::tableName());
 
         $list = Array();
         $parameter = null;
@@ -96,14 +107,12 @@ abstract class ActiveRecord extends Connection {
         $json = "{" . substr($parameter, 1) . "}";
         $param = json_decode($json, true);
 
-        $pdo = parent::connect();
+        $prepareStatement = self::query($command, $param);
 
-        $prepareStatement = $pdo->prepare($command);
-        $prepareStatement->execute($param);
+        if ($action)
+            return $prepareStatement;
 
-        parent::disconnect();
-
-        # if row columns greater than 1
+        # if row columns more than 1
         if (1 < $prepareStatement->rowCount())
             return $prepareStatement->fetchAll();
 
@@ -111,31 +120,68 @@ abstract class ActiveRecord extends Connection {
     }
 
     /**
+     * Make the relation queries
+     * @return string
+     */
+    public function makeRelations() {
+        $belongs_to = self::hasRelations();
+        $target_table = array_keys($belongs_to)[0];
+        $target_domain = $belongs_to[$target_table];
+
+        # select a.*, b.* from accounts a RIGHT join ustadzs b on a.id = b.account_id
+        return sprintf("SELECT A.*, B.* FROM %s A LEFT JOIN %s B ON A.%s = B.%s",
+            static::tableName(), $target_table, self::has_PK(), $target_domain
+        );
+    }
+
+    /**
      * Get model data by them primary keys
      * @param $id : primary key ID
      * @return mixed
-     */ 
+     */
     public static function findByPK($id) {
-        if (false == static::has_PK())
+        if (false == self::has_PK())
             die(get_called_class() . " Has no Primary Key!");
-        
-        $pdo = parent::connect();
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $sql = "SELECT * FROM " . static::tableName() . " WHERE " . static::has_PK() . "=" . $id ;
-        $data = $pdo->query($sql);
 
-        parent::disconnect();
+        if (self::hasRelations())
+            $sql = self::makeRelations();
+        else
+            $sql = (new QueryBuilder)->select()->from(static::tableName());
+
+        $sql .= sprintf(" WHERE %s=%d", self::has_PK(), $id);
+        $data = self::query($sql);
+
         return $data->fetch();
+    }
+
+    /**
+     *
+     * @param $id: primary key
+     */
+    public static function delete($id) {
+        $sql = sprintf(
+            "DELETE FROM `:dbName`.`:tableName`
+            WHERE `:pk` = :id"
+        );
+
+        $bindArray = [
+            ':dbName' => self::$dbName,
+            ':tableName' => static::tableName(),
+            ':pk' => self::has_PK(),
+            ':id' => $id
+        ];
+
+        self::query($sql, $bindArray);
     }
 
     /**
      * Execute complex sql statements
      * @param $sql : sql query
-     * @param $bindParam: an prepared bind arrays for specifict column
+     * @param $bindParam : an prepared bind arrays for specifict column
      * example array(':name' => 'wisrawa')
      * @return PDOStatement
      */
-    public static function query($sql, $bindParam=NULL) {
+    public static function query($sql, $bindParam = NULL) {
         $pdo = parent::connect();
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -159,11 +205,11 @@ abstract class ActiveRecord extends Connection {
      * @return mixed
      */
     public static function get_object_or_404($param) {
-        $data = static::find($param);
+        $data = self::find($param);
 
         # if no data are return
         if (empty($data))
-            header("Location: " . HOSTNAME . "/index.php");
+            Response::render('app/views/404.php');
 
         return $data;
     }
@@ -174,24 +220,19 @@ abstract class ActiveRecord extends Connection {
      * @return mixed
      */
     public static function get_object_or_redirect($param, $page) {
-        $data = static::find($param);
+        $data = self::find($param);
 
         if (empty($data))
-            header("Location: " . HOSTNAME . "/$page");
+            Response::redirect("/$page");
 
         return $data;
     }
 
     public static function getOrFail($param) {
-        $self::get_object_or_404($param);
+        return self::get_object_or_404($param);
     }
 
     public static function getOrRedirect($param, $page) {
-        $self::get_object_or_redirect($param, $page);
-    }
-
-
-    public function __toString() {
-        return $this->tableName();
+        return self::get_object_or_redirect($param, $page);
     }
 }

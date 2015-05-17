@@ -24,4 +24,8 @@ class Items extends ActiveRecord {
             'price' => 'real'
         );
     }
+
+    public function rules() {
+        // TODO: Implement rules() method.
+    }
 }

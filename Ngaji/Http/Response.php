@@ -105,14 +105,12 @@ class Response implements \ArrayAccess, \Countable, \IteratorAggregate {
      * Shortcut to include
      * @param $uri: URI script
      */
-    public static function render($uri, $escape = true) {
+    public static function render($uri) {
+        # FIXME redundant method
         if (file_exists(ABSPATH . "/$uri"))
             include(ABSPATH . "/$uri");
         else
-            if ($escape)
-                echo htmlspecialchars($uri);
-            else 
-                echo $uri;
+            echo htmlspecialchars($uri);
     }
 
     /**

@@ -1,1 +1,10 @@
 # Created by .ignore support plugin (hsz.mobi)
+/assets/plugins/*
+/assets/css/dist
+/assets/css/bootstrap.*
+/assets/css/font-awesome.min.css
+/assets/img/*
+/assets/js/dist
+/assets/js/bootstrap.js
+/assets/js/bootstrap.min.js
+

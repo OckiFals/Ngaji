@@ -1,10 +1,8 @@
 RewriteEngine On
 Options -Indexes
+Options -Multiviews
 
-RewriteRule ^beranda/?$ index.php [NC,L]
-RewriteRule ^login/?$ index.php?r=login [QSA,L]
-RewriteRule ^profile/?$ index.php?r=profile [QSA,L]
-RewriteRule ^logout/?$ index.php?r=/auth/logout [QSA,L]
-
-# RewriteCond $1 !^(index\.php|images|robots\.txt)
-# RewriteRule ^(.*)$ /index.php/$1 [L]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond $1 !^(index\.php|content|app|robots\.txt)
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]

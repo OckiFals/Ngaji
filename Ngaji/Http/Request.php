@@ -1,6 +1,7 @@
 <?php namespace Ngaji\Http;
 
 use ArrayAccess;
+
 /**
  * Ngaji HTTP Request
  *
@@ -10,6 +11,12 @@ use ArrayAccess;
  * @package App/Ngaji/Http
  * @author  Ocki Bagus Pratama
  * @since   2.0.0
+ *
+ * @property String username
+ * @property String password
+ * @property Integer id
+ * @property Integer type
+ * @property String type_display
  */
 class Request implements ArrayAccess {
     const METHOD_HEAD = 'HEAD';
@@ -21,6 +28,11 @@ class Request implements ArrayAccess {
     const METHOD_OPTIONS = 'OPTIONS';
     const METHOD_OVERRIDE = '_METHOD';
 
+    private static $method_call;
+
+    #  Location for overloaded data
+    private static $data = array();
+
     /**
      * Get HTTP method
      * @return mixed
@@ -31,18 +43,20 @@ class Request implements ArrayAccess {
 
     /**
      * Is the GET request?
-     * @return bool
+     *
      */
     public static function GET() {
-        return self::method() === self::METHOD_GET;
+        self::$method_call = self::METHOD_GET;
+        return new Request();
     }
 
     /**
      * Is the POST request?
-     * @return bool
+     *
      */
     public static function POST() {
-        return self::method() === self::METHOD_POST;
+        self::$method_call = self::METHOD_POST;
+        return new Request();
     }
 
     /**
@@ -58,7 +72,7 @@ class Request implements ArrayAccess {
      * @return bool
      */
     public static function is_authenticated() {
-        return isset($_SESSION['id_account']);
+        return (new Session)->has('id_account');
     }
 
     /**
@@ -71,17 +85,18 @@ class Request implements ArrayAccess {
 
     /**
      * Get the session info
-     * @return mixed: array and string
+     * @param bool $field
+     * @return mixed : array and string
      */
     public static function get_user($field = false) {
 
+        $session = new Session();
         # if $field is not define, return all
         if (!$field) {
-            return $_SESSION['id_account'];
-        }
-        # return the specific value of the _SESSION
+            return $session->get('id_account');
+        } # return the specific value of the _SESSION
         else {
-            $user_data = explode('|', $_SESSION['id_account']);
+            $user_data = explode('|', $session->get('id_account'));
             switch ($field) {
                 case 'username':
                     $index = 1;
@@ -95,13 +110,9 @@ class Request implements ArrayAccess {
                 case 'type-display':
                     switch ($user_data[3]) {
                         case 1:
-                            return "Manager";
+                            return "Admin";
                         case 2:
-                            return "Chef";
-                        case 3:
-                            return "Waitress";
-                        case 4:
-                            return "Cashier";
+                            return "Member";
                     }
                 default:
                     $index = 0;
@@ -115,7 +126,7 @@ class Request implements ArrayAccess {
      * Is the request from Manager?
      * @return bool
      */
-    public static function is_manager() {
+    public static function is_admin() {
         return 1 == self::get_user('type');
     }
 
@@ -123,54 +134,68 @@ class Request implements ArrayAccess {
      * Is the request from Chef?
      * @return bool
      */
-    public static function is_chef() {
+    public static function is_member() {
         return 2 == self::get_user('type');
     }
 
+    public static function user() {
+
+        if (!Request::is_authenticated())
+            die("There are no auth account!");
+
+        $session = new Session();
+
+        $data = explode('|', $session->get('id_account'));
+
+        self::$data['id'] = $data[0];
+        self::$data['username'] = $data[1];
+        self::$data['name'] = $data[2];
+        self::$data['type'] = $data[3];
+
+        return new Request();
+    }
+
+
     /**
-     * Is the request from Waitress?
-     * @return bool
+     * Set variable value with magic set method
+     * @param $name
+     * @param $value
      */
-    public static function is_waitress() {
-        return 3 == self::get_user('type');
+    public function __set($name, $value) {
+        # echo "Setting '$name' to '$value'\n";
+        self::$data[$name] = $value;
     }
 
     /**
-     * Is the request from Cashier?
-     * @return bool
+     * Get variable value with magic get method
+     * @param $name
+     * @return null if error
      */
-    public static function is_cashier() {
-        return 4 == self::get_user('type');
+    public function __get($name) {
+        # echo "Getting '$name'\n";
+
+        if (self::$method_call == self::METHOD_POST) {
+
+            if (array_key_exists($name, $_POST))
+                return $_POST[$name];
+
+        } else if (self::$method_call == self::METHOD_GET) {
+
+            if (array_key_exists($name, $_GET))
+                return $_GET[$name];
+
+        } else if (array_key_exists($name, self::$data)) {
+            return self::$data[$name];
+        }
+
+        $trace = debug_backtrace();
+        trigger_error(
+            'Undefined property via __get(): ' . $name .
+            ' in ' . $trace[0]['file'] .
+            ' on line ' . $trace[0]['line'],
+            E_USER_NOTICE);
+        return null;
     }
-
-    public static function REST() {
-        $request = explode("/", substr(@$_SERVER['PATH_INFO'], 1));
-
-//        switch ($this->method()) {
-//            case 'PUT':
-//                Rest($request);
-//                break;
-//            case 'POST':
-//                rest_post($request);
-//                break;
-//            case 'GET':
-//                rest_get($request);
-//                break;
-//            case 'HEAD':
-//                rest_head($request);
-//                break;
-//            case 'DELETE':
-//                rest_delete($request);
-//                break;
-//            case 'OPTIONS':
-//                rest_options($request);
-//                break;
-//            default:
-//                rest_error($request);
-//                break;
-//        }
-    }
-
 
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>

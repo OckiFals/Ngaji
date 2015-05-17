@@ -5,9 +5,14 @@ return [
     'class' => [
         'Ngaji/Routing/Route.php',
         'Ngaji/Routing/Router.php',
+        # TODO test regex match
+        'Ngaji/Routing/Route2.php',
+        'Ngaji/Routing/Router2.php',
+
         'Ngaji/Routing/Controller.php',
         'Ngaji/Http/Request.php',
         'Ngaji/Http/Response.php',
+        'Ngaji/Http/Session.php',
         'Ngaji/View/View.php',
         # PDO
         'Ngaji/Database/Connection.php',
@@ -16,8 +21,6 @@ return [
         # helpers
         'app/helpers/DateFormat.php',
         'app/helpers/Html.php',
-        # controller
-        'app/controllers/ApplicationController.php',
 
         # register your class in here, with full directory path
         ''

@@ -24,4 +24,8 @@ class Accounts extends ActiveRecord {
             'name' => 'integer'
         );
     }
+
+    public function rules() {
+        // TODO: Implement rules() method.
+    }
 }

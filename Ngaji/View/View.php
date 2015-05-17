@@ -19,9 +19,6 @@ class View {
             include_once($template);
             $renderedView = ob_get_clean();
 
-            $renderedView = str_replace('{% block head %}', self::makeHead(), $renderedView);
-            $renderedView = str_replace('{% block header %}', self::makeHeader(), $renderedView);
-            // $renderedView = str_replace('{% block footer %}', self::makeFooter(), $renderedView);
             echo $renderedView;
         } catch (Exception $e) {
             echo $e->getMessage();
@@ -50,18 +47,5 @@ class View {
         $renderedView = ob_get_clean();
 
         return $renderedView;
-    }
-
-    static function makeSlideShow() {
-        if (!isset($_SESSION['id_member'])):
-            ob_start();
-            echo '<div id="slideshow">';
-            include(ABSPATH . "/template/slideshow.php");
-            echo '</div>';
-            $renderedView = ob_get_clean();
-
-            return $renderedView;
-        endif;
-        return false;
     }
 }

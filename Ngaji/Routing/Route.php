@@ -15,7 +15,8 @@ class Route {
     public function __construct($config = []) {
         $this->router = new AltoRouter();
         $this->router->setBasePath($config['hostname']);
-
+        print_r($_GET['url']);
+        call_user_func_array('app\contollers\ApplicationController' . '::' . 'profile', [1231231]);
         # Main routes
         $this->router->map('GET', '/', function () {
             Response::redirect('index.php');

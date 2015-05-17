@@ -1,4 +1,4 @@
-<?php namespace app\contollers;
+<?php namespace app\controllers;
 /**
  * Template Controller
  *

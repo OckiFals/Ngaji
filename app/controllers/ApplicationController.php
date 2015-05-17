@@ -1,4 +1,4 @@
-<?php namespace app\contollers;
+<?php namespace app\controllers;
 
 /**
  * ApplicationController
@@ -34,9 +34,10 @@ class ApplicationController extends Controller {
         }
     }
 
-    public static function profile() {
+    public static function profile($id) {
         # self::login_required();
 
+        echo $id;
         # get id account from request header
         $id = Request::get_user('id');
         # fetch user data account
