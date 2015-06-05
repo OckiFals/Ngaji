@@ -160,14 +160,13 @@ abstract class ActiveRecord extends Model {
      */
     public static function delete($id) {
         $sql = sprintf(
-            "DELETE FROM `:dbName`.`:tableName`
-            WHERE `:pk` = :id"
+            "DELETE FROM `%s`.`%s`
+            WHERE `%s` = :id", self::$dbName,
+            static::tableName(),
+            self::has_PK()
         );
 
         $bindArray = [
-            ':dbName' => self::$dbName,
-            ':tableName' => static::tableName(),
-            ':pk' => self::has_PK(),
             ':id' => $id
         ];
 
