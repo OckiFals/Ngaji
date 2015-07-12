@@ -9,6 +9,13 @@
 abstract class Model extends Connection {
     private $dataModel;
 
+    /**
+     * Name of the specifict table
+     * Child must override this function
+     * and return String: table name on the database
+     * @param $dataModel
+     */
+
     public function __construct($dataModel = []) {
         $this->dataModel = $dataModel;
     }

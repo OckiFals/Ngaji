@@ -11,7 +11,6 @@ use PDOStatement;
  * @since 1.0
  */
 abstract class ActiveRecord extends Model {
-    var $classModel;
 
     public function __construct($datamodel = []) {
         parent::__construct($datamodel);
@@ -19,6 +18,8 @@ abstract class ActiveRecord extends Model {
 
     /**
      * Save the new object models
+     *
+     * TODO Experimental!
      */
     public function save() {
         $sql = sprintf("INSERT INTO `%s`.`%s` (%s) VALUES (%s)",
@@ -28,9 +29,40 @@ abstract class ActiveRecord extends Model {
             'NULL, :id, :post, now(), CURRENT_TIMESTAMP'
         );
 
-        die($sql);
-
         self::query($sql);
+    }
+
+    /**
+     *
+     * @param $id: primary key
+     */
+    public static function delete($id) {
+        $sql = sprintf(
+            "DELETE FROM %s WHERE %s=:id",
+            static::tableName(), self::has_PK()
+        );
+
+        $bindArray = [
+            'id' => $id
+        ];
+
+        self::query($sql, $bindArray);
+    }
+
+    /**
+     * Get Models SQL Command
+     * You can Override this func. if child model has complex SQL 
+     */
+    public function getSQL() {
+        # TODO
+        if (self::hasRelations())
+            $sql = self::makeRelations();
+        else
+            $sql = (new QueryBuilder)
+                ->select()
+                ->from(static::tableName());
+
+        return $sql;
     }
 
     /**
@@ -67,56 +99,111 @@ abstract class ActiveRecord extends Model {
             return null;
     }
 
-
     /**
      * Get all data!
      * @return PDOStatement: fetchAll query
      */
     public static function all() {
+        $sql = static::getSQL();
 
-        # TODO
-        if (self::hasRelations())
-            $sql = self::makeRelations();
-        else
-            $sql = (new QueryBuilder)->select()->from(static::tableName());
-
-        return self::query($sql);
+        return self::query($sql)
+            ->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE);
     }
 
     /**
-     * @param $param : the array('table-name' => 'value')
-     * @param bool $action
-     * @return mixed
+     * Find and get all rows data of the table
+     * This will return records in a stdClass array
+     * @param $param : the array('table-name' => 'value') or none
+     * @return \stdClass array
      */
-    public static function find($param, $action=false) {
-
-        if (static::hasRelations())
-            $command = self::makeRelations();
-        else
-            $command = (new QueryBuilder)->select()->from(static::tableName());
-
-        $list = Array();
-        $parameter = null;
-        foreach ($param as $key => $value) {
-            $list[] = "$key = :$key";
-            $parameter .= ', ":' . $key . '":"' . $value . '"';
+    public static function findAll($param) {
+        $command = static::getSQL();
+        
+        if (is_array($param)) {
+            $command .= self::get_where($param)['sql'];
+            $param = self::get_where($param)['params'];
+        } else { # if param is String or QueryBuilder instance
+            $command .= $param;
+            $param=[];
         }
-
-        $command .= ' WHERE ' . implode(' AND ', $list);
-
-        $json = "{" . substr($parameter, 1) . "}";
-        $param = json_decode($json, true);
 
         $prepareStatement = self::query($command, $param);
 
-        if ($action)
-            return $prepareStatement;
+        return $prepareStatement
+            ->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE);
+    }
 
-        # if row columns more than 1
-        if (1 < $prepareStatement->rowCount())
-            return $prepareStatement->fetchAll();
+    /**
+     * Find one record
+     *
+     * Uses:
+     * 1. findOne(1)
+     * equivalent to SELECT ... WHERE PK=1
+     *
+     * 2. findOne([
+     *          'username' => 'john',
+     *          'jobs' => [
+     *              '!=' => 'PM'
+     *           ],
+     * ])
+     * equivalent to SELECT ... WHERE `username`='john' AND `jobs` != 'PM'
+     *
+     * @param $param : the array('table-name' => 'value')
+     * @return mixed
+     */
+    public static function findOne($param=null) {
 
-        return $prepareStatement->fetch();
+        $command = static::getSQL();
+
+        /*
+         * Check if $param vars is an array object
+         * Eg. $param = array('username' => 'john', 'jobs' => 'PM')
+         */
+        if (is_array($param)) {
+            $sql_where = self::get_where($param);
+
+            $command .= $sql_where['sql'];
+            $param = $sql_where['params'];
+        }
+        /*
+         * When $param is an integer, find by the PK
+         */
+        else if (is_numeric($param)) {
+            $sql_where = self::get_where([
+                self::has_PK() => $param
+            ]);
+
+            $command .= $sql_where['sql'];
+            $param = $sql_where['params'];
+        }
+        /*
+         * When $param is a String or a QueryBuilder instance
+         */
+        else {
+            $command .= $param;
+            $param=[];
+        }
+
+        /*
+         * Fecth first row on these table
+         */
+        $prepareStatement = self::query($command, $param);
+
+        return $prepareStatement->fetchObject();
+    }
+
+    /**
+     * Build the query object by calling QuertBuilder class
+     * By the ActiveRecord Model
+     *
+     * @return QueryBuilder
+     */
+    public static function find() {
+        $dao = new QueryBuilder();
+        $dao->select()
+            ->from(static::tableName());
+
+        return $dao;
     }
 
     /**
@@ -124,53 +211,65 @@ abstract class ActiveRecord extends Model {
      * @return string
      */
     public function makeRelations() {
+        /*
+         * Get belongs_to relations from rules() func.
+         */
         $belongs_to = self::hasRelations();
-        $target_table = array_keys($belongs_to)[0];
-        $target_domain = $belongs_to[$target_table];
 
-        # select a.*, b.* from accounts a RIGHT join ustadzs b on a.id = b.account_id
-        return sprintf("SELECT A.*, B.* FROM %s A LEFT JOIN %s B ON A.%s = B.%s",
-            static::tableName(), $target_table, self::has_PK(), $target_domain
-        );
-    }
+        /*
+         * Separate string into an array with delimiter @
+         * from foreign key target table(belongs_to rules)
+         *
+         * example:
+         * ...
+         *  'belongs_to' => [
+         *     # Schedules.id => self.id
+         *      schedules@id' => 'id'
+         *  ]
+         * ...
+         *
+         * Will produce:
+         * array(
+         *    [0] => 'schedules',
+         *    [1] => 'id'
+         * )
+         *
+         */
+        $target_source = explode('@', array_keys($belongs_to)[0]);
 
-    /**
-     * Get model data by them primary keys
-     * @param $id : primary key ID
-     * @return mixed
-     */
-    public static function findByPK($id) {
-        if (false == self::has_PK())
-            die(get_called_class() . " Has no Primary Key!");
+        $target_table = $target_source[0];
+        # if the domain name is defined, use that domain's name, 'id' otherwise  
+        $target_domain = (array_key_exists(1, $target_source)) ? 
+            $target_source[1] : 'id';
 
-        if (self::hasRelations())
-            $sql = self::makeRelations();
-        else
-            $sql = (new QueryBuilder)->select()->from(static::tableName());
-
-        $sql .= sprintf(" WHERE %s=%d", self::has_PK(), $id);
-        $data = self::query($sql);
-
-        return $data->fetch();
-    }
-
-    /**
-     *
-     * @param $id: primary key
-     */
-    public static function delete($id) {
-        $sql = sprintf(
-            "DELETE FROM `%s`.`%s`
-            WHERE `%s` = :id", self::$dbName,
-            static::tableName(),
-            self::has_PK()
-        );
-
-        $bindArray = [
-            ':id' => $id
+        # this table foreign key 
+        $self_domain = $belongs_to[
+            array_keys($belongs_to)[0]
         ];
 
-        self::query($sql, $bindArray);
+        # eg: select a.*, b.* from accounts a RIGHT join ustadzs b on a.id = b.account_id
+        return sprintf('SELECT `%1$s`.*, `%2$s`.* 
+                FROM `%1$s` 
+                LEFT JOIN `%2$s` 
+                    ON `%1$s`.`%3$s` = `%2$s`.`%4$s`',
+            static::tableName(), $target_table, $self_domain, $target_domain
+        );
+    }
+
+    /**
+     * Get where condition
+     * @param $condition
+     * @return array
+     */
+    public function get_where($condition) {
+        $queryBuilder = new QueryBuilder();
+
+        $queryBuilder->where($condition);
+
+        return [
+            'sql' => $queryBuilder->get_sql(),
+            'params' => $queryBuilder->get_params()
+        ];
     }
 
     /**
@@ -184,14 +283,19 @@ abstract class ActiveRecord extends Model {
         $pdo = parent::connect();
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        if (is_array($bindParam)) {
-            $prepareStatement = $pdo->prepare($sql);
-            $prepareStatement->execute($bindParam);
-        } else {
-            $prepareStatement = $pdo->query($sql);
+        try {
+            if (is_array($bindParam)) {
+                $prepareStatement = $pdo->prepare($sql);
+                $prepareStatement->execute($bindParam);
+            } else {
+                $prepareStatement = $pdo->query($sql);
+            }
+        } catch(\Exception $e) {
+            print_r($e);
+        } finally {
+            parent::disconnect();
         }
 
-        parent::disconnect();
         return $prepareStatement;
     }
 
@@ -201,14 +305,14 @@ abstract class ActiveRecord extends Model {
 
     /**
      * @param $param
-     * @return mixed
+     * @return \stdClass
      */
     public static function get_object_or_404($param) {
-        $data = self::find($param);
+        $data = self::findOne($param);
 
         # if no data are return
         if (empty($data))
-            Response::render('app/views/404.php');
+            Response::redirect('');
 
         return $data;
     }
@@ -216,22 +320,37 @@ abstract class ActiveRecord extends Model {
     /**
      * @param $param
      * @param $page
-     * @return mixed
+     * @return \stdClass
      */
     public static function get_object_or_redirect($param, $page) {
-        $data = self::find($param);
+        $data = self::findOne($param);
 
         if (empty($data))
-            Response::redirect("/$page");
+            Response::redirect("$page");
 
         return $data;
     }
 
+    /**
+     * Shortcut to get_object_or_404
+     * @param $param
+     * @return \stdClass
+     */
     public static function getOrFail($param) {
         return self::get_object_or_404($param);
     }
 
+    /**
+     * Shortcut to get_object_or_redirect
+     * @param $param:
+     * @param $page: redirect to?
+     * @return \stdClass
+     */
     public static function getOrRedirect($param, $page) {
         return self::get_object_or_redirect($param, $page);
+    }
+
+    public function __toString() {
+        return $this->tableName();
     }
 }

@@ -14,6 +14,7 @@ use PDO;
 class QueryBuilder {
     private $sql = '';
     private $param = [];
+    private $fetch = PDO::FETCH_CLASS;
     private $pdo;
 
     /**
@@ -22,6 +23,22 @@ class QueryBuilder {
     public function __construct() {
         $this->pdo = Connection::connect();
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    }
+
+    /**
+     * Get the sql command
+     * @return string
+     */
+    public function get_sql() {
+        return $this->sql;
+    }
+
+    /**
+     * Get the sql param
+     * @return array
+     */
+    public function get_params() {
+        return $this->param;
     }
 
     /**
@@ -46,8 +63,28 @@ class QueryBuilder {
             $list = Array();
             $param = null;
             foreach ($condition as $key => $value) {
-                $list[] = "$key = :$key";
-                $param .= ', ":' . $key . '":"' . $value . '"';
+                if (is_array($value)) {
+                    /*
+                     * Model::findOne[
+                     *     ...
+                     *     'type' = [
+                     *          '!=' => 1
+                     *      ],
+                     *      ...
+                     * ]
+                     *
+                     * SELECT ... FROM Model
+                     *      ... WHERE ... `type` != 1
+                     * LIMIT 1
+                     */
+                    $list[] = "$key " . array_keys($value)[0] . " :$key";
+
+                    $param .= ', ":' . $key . '":"' . array_values($value)[0] . '"';
+                } else {
+                    $list[] = "$key = :$key";
+
+                    $param .= ', ":' . $key . '":"' . $value . '"';
+                }
             }
 
             $json = "{" . substr($param, 1) . "}";
@@ -61,29 +98,54 @@ class QueryBuilder {
     }
 
     public function like($like) {
-        $this->sql .= ' like ' . "'{$like}'";
+        $this->sql .= ' LIKE ' . "'{$like}'";
+
+        return $this;
+    }
+
+    public function orderBy($criteria) {
+        $this->sql .= ' ORDER BY ' . "'{$criteria}'";
+
+        return $this;
+    }
+
+    public function asArray() {
+        $this->fetch = PDO::FETCH_ASSOC;
 
         return $this;
     }
 
     /**
-     * Execute the current $sql statements!
-     * Use ->get(false) to return PDOStatement
-     * Default ->get() will return array fetch/fetchAll
-     * @param bool $fetch set false to return PDOStatement
-     * @return array|mixed|\PDOStatement
+     * Execute the current $sql statements that return one record data!
+     * @return array | \stdClass
      */
-    public function get($fetch=true) {
+    public function getOne() {
         $prepareStatement = $this->pdo->prepare($this->sql);
         $prepareStatement->execute($this->param);
 
-        if (!$fetch)
-            return $prepareStatement;
+        Connection::disconnect();
 
-        if (1 == $prepareStatement->rowCount())
-            return $prepareStatement->fetch();
+        if ($this->fetch !== PDO::FETCH_CLASS) {
+            if (1 == $prepareStatement->columnCount())
+                return $prepareStatement->fetch(PDO::FETCH_COLUMN);
+            return $prepareStatement->fetch($this->fetch);
+        }
 
-        return $prepareStatement->fetchAll();
+        return $prepareStatement->fetchObject();
+    }
+
+    /**
+     * Execute the current $sql statements that return many records data!
+     * @return array stdClass | array in array
+     */
+    public function getAll() {
+        $prepareStatement = $this->pdo->prepare($this->sql);
+        $prepareStatement->execute($this->param);
+
+        # close connection
+        Connection::disconnect();
+
+        return $prepareStatement->fetchAll($this->fetch);
     }
 
     /**
@@ -93,6 +155,9 @@ class QueryBuilder {
     public function count() {
         $prepareStatement = $this->pdo->prepare($this->sql);
         $prepareStatement->execute($this->param);
+
+        # close connection
+        Connection::disconnect();
 
         return $prepareStatement->rowCount();
     }
