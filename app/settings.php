@@ -52,4 +52,15 @@ return [
         'header' => 'header.php',
         'footer' => 'footer.php'
     ],
+    # route
+    'route' => [
+        'default' => 'ApplicationController',
+        '404' => 'ApplicationController::error404',
+        'login' => 'ApplicationController::login',
+
+        #test
+        'test' => 'ApplicationController::test',
+        'ustadz/hu' => 'ApplicationController::test',
+        'ustadz/(?P<name>\s{4})' => 'ApplicationController::test'
+    ],
 ];

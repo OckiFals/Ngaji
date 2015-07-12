@@ -47,4 +47,13 @@ class ApplicationController extends Controller {
 
         Response::render('hello profile');
     }
+
+    public static function test($id=0) {
+        echo 'test';
+        print_r($id);
+    } 
+
+    public static function error404() {
+        echo '404 Not Found';
+    }
 }

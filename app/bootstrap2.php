@@ -48,12 +48,8 @@ class bootstrap2 {
 
         # make a route
         $router = new Route2($this->config);
-
-        call_user_func_array(
-            $router->router->getController() . '::' . $router->router->getMethod() , [
-                $router->router->getParam()
-            ]
-        );
+        $router->execute();
+        
     }
 
     public function loadClasses() {
@@ -94,7 +90,6 @@ class bootstrap2 {
      * @since 2.0.1
      * @param $class : class name(automatic define by PHP)
      */
-    # TODO auto load class using this
     public function __autoloader($class) {
         $full_class_path = sprintf('%s.php', str_replace('\\', '/', $class));
         if (file_exists($full_class_path))
