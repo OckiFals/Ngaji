@@ -22,21 +22,33 @@ class Request implements ArrayAccess {
     const METHOD_HEAD = 'HEAD';
     const METHOD_GET = 'GET';
     const METHOD_POST = 'POST';
+    const METHOD_FILES = 'POST';
     const METHOD_PUT = 'PUT';
     const METHOD_PATCH = 'PATCH';
     const METHOD_DELETE = 'DELETE';
     const METHOD_OPTIONS = 'OPTIONS';
     const METHOD_OVERRIDE = '_METHOD';
 
+    /**
+     * Type of the user
+     */
+    const ADMIN = 1;
+    const USTADZ = 2;
+    const MEMBER = 3;
+
     private $method_call;
 
     #  Location for overloaded data
     private $data = array();
 
+    /**
+     * @param string $method
+     */
     public function __construct($method='') {
         if (isset($method))
             $this->method_call = $method;
     }
+
     /**
      * Get HTTP method
      * @return mixed
@@ -46,19 +58,79 @@ class Request implements ArrayAccess {
     }
 
     /**
-     * Is the GET request?
+     * Get the GET request data
      *
+     * Originally in PHP way, to gets the 'example' get data
+     * we use $_GET['example']
+     *
+     * With this func. you can perform that action by 2 different way
+     *
+     * Usage:
+     * Request::GET('example');
+     * Or
+     * Request::GET()->example
+     *
+     * @param null $key post request key name
+     * @return String|Request
      */
-    public static function GET() {
+    public static function GET($key=null) {
+        if ($key) {
+            return (array_key_exists($key, $_GET)) ?
+                $_GET[$key] : null;
+        }
+
         return (new Request(self::METHOD_GET));
     }
 
     /**
-     * Is the POST request?
+     * Get the POST request data
      *
+     * Originally in PHP way, to gets the 'example' post data
+     * we use $_POST['example']
+     *
+     * With this func. you can perform that action by 2 different way
+     *
+     * Usage:
+     * Request::POST('example');
+     * Or
+     * Request::POST()->example
+     *
+     * @param null $key post request key name
+     * @return String|Request
      */
-    public static function POST() {
+    public static function POST($key=null) {
+        if ($key) {
+            return (array_key_exists($key, $_POST)) ?
+                $_POST[$key] : null;
+        }
+
         return (new Request(self::METHOD_POST));
+    }
+
+    /**
+     * Get the FILES request data
+     *
+     * Originally in PHP way, to gets the 'example' file data
+     * we use $_FILES['example']
+     *
+     * With this func. you can perform that action by 2 different way
+     *
+     * Usage:
+     * Request::FILES('example', 'key');
+     * Or
+     * Request::FILES('example')->key
+     *
+     * @param $name
+     * @param null $key post request key name
+     * @return Request|String
+     */
+    public static function FILES($name, $key=null) {
+        if ($key) {
+            return (array_key_exists($key, $_FILES[$name])) ?
+                $_FILES[$name][$key] : null;
+        }
+
+        return (new Request(self::METHOD_FILES));
     }
 
     /**
@@ -91,6 +163,7 @@ class Request implements ArrayAccess {
      * @return mixed : array and string
      */
     public static function get_user($field = false) {
+
         if (!Request::is_authenticated())
             return false;
 
@@ -116,6 +189,8 @@ class Request implements ArrayAccess {
                         case 1:
                             return "Admin";
                         case 2:
+                            return "Ustadz";
+                        case 3:
                             return "Member";
                     }
                 default:
@@ -135,11 +210,19 @@ class Request implements ArrayAccess {
     }
 
     /**
-     * Is the request from Chef?
+     * Is the request from Ustadz?
+     * @return bool
+     */
+    public static function is_ustadz() {
+        return 2 == self::get_user('type');
+    }
+
+    /**
+     * Is the request from Member?
      * @return bool
      */
     public static function is_member() {
-        return 2 == self::get_user('type');
+        return 3 == self::get_user('type');
     }
 
     public static function user() {
@@ -185,6 +268,11 @@ class Request implements ArrayAccess {
 
             return (array_key_exists($name, $_GET)) ?
                 $_GET[$name] : null;
+
+        } else if ($this->method_call == self::METHOD_FILES) {
+
+            return (array_key_exists($name, $_FILES)) ?
+                $_FILES[$name] : null;
 
         } else if (array_key_exists($name, $this->data)) {
             return $this->data[$name];
