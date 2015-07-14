@@ -20,29 +20,39 @@
    contoh: asumsikan url path untuk project adalah http://ockifals.dev/bisangaji
    maka ubah definisi app root pada index.php menjadi:
    
-   `define('HOSTNAME', '/bisangaji');`
+   
+   ```php 
+   define('HOSTNAME', '/bisangaji');
+   ```
    
    
    Untuk versi ini, telah digunakan fungsi untuk mendapatkan nama master folder untuk project yang bersangkutan.
    Oleh karenanya mendefinisikan web-app path tidak lagi menjadi suatu keharusan(optional).
    
+   
 ###2. Ubah dan sesuaikan konfigurasi pada App/setting.php
    File tersebut merupakan konfigurasi fundamental yang dimuat ketika aplikasi web dijalankan.
    
-   2.1 Konfigurasi database
+   **2.1 Konfigurasi database**
    
       
-      ...
+      ```php
+      
       'db' => [
 	    'name' => 'nama_database',
     	    'host' => 'host db server, default: localhost',
     	    'user' => 'username akun',
     	    'pass' => 'password akun'
       ],
-      ...
+      
+      ```
   
-   2.2 Daftarkan contoller atau user defined clas(optional)
+  
+   **2.2 Daftarkan contoller atau user defined clas(optional)**
+   
+   
        Perlu diketahui bahwa class di daftarkan dengan full path
+       
        
        ```php
        'class' => [
@@ -50,21 +60,31 @@
            'app/Controllers/UstadzController.php'
            ...
         ```
-   2.3 Daftarkan model(optional)
+        
+        
+   **2.3 Daftarkan model(optional)**
+   
+   
        Model didaftarkan tanpa full path, tambahkan hanya nama filenya saja.
        
        Misal terdapat model Ustadz di /app/models/Ustadz.php. 
        Untuk mendaftarkannya, tidak perlu menuliskan '/app/models/Ustadz.php' cukup hanya 'Ustadz'
-       `
+       
+       
+       ```
        'models' => [
            'Ustadz',
            ...
-           `
+        ```
+       
+       
        Ketika model digunakan pada contoller, jangan lupa untuk memanggil model tersebut pada App namespace.
        
        contoh:
        pada baris controller paling atas tambahkan
        
+       
+       ```php
        use app\models\Ustadz;
        
        Sehingga:
@@ -78,7 +98,9 @@
        ....
        
        }
-
+	```
+	
+	
 ###3. Sesuaikan route
    Ngaji/Routing/Route.php merupakan class yang bertugas mengarahkan request dari client. 
    Request tersebut akan ditentukan jalurnya dengan memanggil controller yang sesuai.
@@ -110,7 +132,7 @@
       RewriteRule ^login/?$ index.php/login [QSA,L]
    
 ###4. Bekerja dengan Html helpers
-   4.1 Html::Load()
+   **4.1 Html::Load()**
        
        Helper ini digunakan pada view untuk memuat file JS, CSS, dan image secara dinamis
        
@@ -124,7 +146,7 @@
        JS: /assets/js
        IMG: /assets/img
        
-       4.1.1 Load CSS dan JS
+       **4.1.1 Load CSS dan JS**
       	  Contoh 1, terdapat file style.css pada direktori default /assets/css
       	  
       	  <?= Html::load('css', 'style.css') ?>
@@ -134,7 +156,7 @@
       	  
       	  <?= Html::load('js', 'dist/js/angular.js') ?>
        
-       4.1.2 Load image
+       **4.1.2 Load image**
        
        
           Contoh 1: tanpa atribut
@@ -154,14 +176,15 @@
         		    'class' => 'user-image',
         		    'alt' => 'User Image'
       	      ])
-      	  ?>```
+      	  ?>
+      	  ```
       	  
       	  Kode diatas akan menghasilkan:
       	  
       	  
       	  `<img src="/[hostname-app]/assets/img/avatar.png" class="user-image" alt="User Image"/>`
 
-  4.2 `Html::anchor()`
+  **4.2 `Html::anchor()`**
   
   
 	```php
@@ -184,7 +207,7 @@
       <a href="/[hostname-app]/login" class="btn btn-default btn-flat">Login Disini</a>
 	```
 ### 5. Bekerja dengan database
-   5.1 `Model::all()`
+   **5.1 `Model::all()`**
    
    
 	Mengambil seluruh baris data dari suatu model
@@ -196,5 +219,72 @@
 	class Example extend Controller{
 		public static function test{ 
 		$data = Ustadz::all();
-		....
 	```
+	
+	
+   **5.2 `Model::findOne()`**
+	Mengambil satu baris data dengan criteria atau tanpa criteria
+	
+	**5.2.1 Mengambil satu data teratas**
+	```php
+	$data = Ustadz::findOne();
+	```
+	
+	**5.2.2 Mencari berdasarkan primary key**
+	```php
+	$data = Ustadz::findOne(2);
+	```
+	
+	**5.2.2 Mencari berdasarkan kriteria nilai tertentu**
+	```php
+	$data = Ustadz::findOne([
+		'username' => 'subali'
+	]);
+	```
+	
+    **5.3 `Model::findAll()`**
+    
+    
+	Mengambil seluruh baris data dengan criteria atau tanpa criteria
+	
+	**5.2.1 Mencari berdasarkan kriteria nilai tertentu**
+	```php
+	$data = Ustadz::findAll([
+		'type` => 1,
+		'active' => 1
+	]);
+	```
+	
+	
+	Setara dengan:
+	
+	
+	```sql
+	SELECT ... FROM ... WHERE `type`=1 AND `active`=1
+	```
+	
+	
+	```php
+	$data = Ustadz::findAll([
+		'type` => 1,
+		'active' => [
+			'!=` => 1
+		]
+	]);
+	```
+	
+	
+	Setara dengan:
+	
+	
+	```sql
+	SELECT ... FROM ... WHERE `type`=1 AND `active`!=1
+	```
+	
+	**5.2.2 Mencari berdasarkan kriteria nilai tertentu**
+	```php
+	$data = Ustadz::findOne([
+		'username' => 'subali'
+	]);
+	```
+	
