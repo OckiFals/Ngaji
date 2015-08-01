@@ -97,6 +97,26 @@ class QueryBuilder {
         return $this;
     }
 
+    public function and_($and) {
+        if (is_array($and)) {
+            $this->sql .= " AND " . array_keys($and)[0] . "='" . array_values($and)[0] . "'";
+        } else {
+            $this->sql .= " AND {$and}";
+        }
+
+        return $this;
+    }
+
+    public function or_($or) {
+        if (is_array($or)) {
+            $this->sql .= " OR " . array_keys($or)[0] . "='" . array_values($or)[0] . "'";
+        } else {
+            $this->sql .= " OR {$or}";
+        }
+
+        return $this;
+    }
+
     public function like($like) {
         $this->sql .= ' LIKE ' . "'{$like}'";
 

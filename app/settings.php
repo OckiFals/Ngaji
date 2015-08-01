@@ -28,8 +28,8 @@ return [
     # database configuration
     'db' => [
         'driver' => 'sqlite', # replace it with mysql
-        'name' => 'manajemen_resto',
-        'host' => '../../db.sqlite3',
+        'name' => '.../../db.sqlite3',
+        'host' => '',
         'user' => '',
         'pass' => ''
     ],

@@ -2,7 +2,17 @@
 
 use Ngaji\Database\ActiveRecord;
 
-class Accounts extends ActiveRecord {
+/**
+ * Class Members
+ *
+ * @property int $account_id
+ * @property string $city
+ * @property int $age
+ *
+ * @package app\models
+ * @author Ocki Bagus Pratama
+ */
+class Members extends ActiveRecord {
 
     public function __construct($className=__CLASS__) {
         parent::__construct();
@@ -10,19 +20,14 @@ class Accounts extends ActiveRecord {
     }
 
     public function tableName() {
-        return 'accounts';
+        return 'members';
     }
 
     public function attributes() {
         return array(
-            'id' => [
-                'integer',
-                'auto_increment',
-                'primary_key'
-            ],
-            'username' => 'varchar_80',
-            'password' => 'varchar_80',
-            'name' => 'integer'
+            ['account_id', ['required', 'int']],
+            ['city', ['required', 'string', 'max_length' => 20]],
+            ['age', ['required', 'int']],
         );
     }
 

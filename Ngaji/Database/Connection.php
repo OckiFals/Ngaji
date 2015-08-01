@@ -1,12 +1,18 @@
 <?php namespace Ngaji\Database;
+/**
+ * Class Connection
+ * @package Ngaji\Database
+ * @author Ocki Bagus Pratama
+ * @since 1.0
+ */
 
 use PDO;
 use PDOException;
 
 class Connection {
-    protected static $dbDriver;
-    protected static $dbName;
-    protected static $dbHost;
+    private static $dbDriver;
+    public static $dbName;
+    private static $dbHost;
     private static $dbUsername;
     private static $dbUserPassword;
 
@@ -28,8 +34,12 @@ class Connection {
         # One connection through whole application
         if (null == self::$cont) {
             try {
-                self::$cont = new PDO("mysql:host=" . self::$dbHost . ";" . "dbname=" .
-                    self::$dbName, self::$dbUsername, self::$dbUserPassword);
+                if ('mysql' === self::$dbDriver) {
+                    self::$cont = new PDO("mysql:host=" . self::$dbHost . ";" . "dbname=" .
+                        self::$dbName, self::$dbUsername, self::$dbUserPassword);
+                } else if ('sqlite' === self::$dbDriver) {
+                    self::$cont = new PDO("sqlite:" . self::$dbName);
+                }
             } catch (PDOException $e) {
                 die($e->getMessage());
             }

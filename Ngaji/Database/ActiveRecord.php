@@ -1,8 +1,9 @@
 <?php namespace Ngaji\Database;
 
-use Ngaji\Http\Response;
 use PDO;
 use PDOStatement;
+use Ngaji\Http\Response;
+use Ngaji\Database\Connection as Database;
 
 /**
  * Class ActiveRecord
@@ -12,24 +13,16 @@ use PDOStatement;
  */
 abstract class ActiveRecord extends Model {
 
-    public function __construct($datamodel = []) {
-        parent::__construct($datamodel);
+    public function __construct() {
+        parent::__construct();
     }
 
     /**
      * Save the new object models
      *
-     * TODO Experimental!
      */
     public function save() {
-        $sql = sprintf("INSERT INTO `%s`.`%s` (%s) VALUES (%s)",
-            self::$dbName,
-            static::tableName(),
-            implode(', ', array_keys(static::attributes())),
-            'NULL, :id, :post, now(), CURRENT_TIMESTAMP'
-        );
 
-        self::query($sql);
     }
 
     /**
@@ -66,48 +59,23 @@ abstract class ActiveRecord extends Model {
     }
 
     /**
-     * Get model attributes
-     * @param $field : column name
-     * @return mixed: array or string
-     */
-    public function get_attr($field) {
-        return static::attributes()[$field];
-    }
-
-    /**
-     * Is the model has Primary Key?
-     * @return mixed
-     */
-    public static function has_PK() {
-        $attrs = static::rules();
-
-        if (array_key_exists('primary_key', $attrs))
-            return $attrs['primary_key'];
-        else
-            return false;
-    }
-
-    /**
-     * Is the model has relations?
-     */
-    public static function hasRelations() {
-        $attrs = static::rules();
-
-        if (array_key_exists('belongs_to', $attrs))
-            return $attrs['belongs_to'];
-        else
-            return null;
-    }
-
-    /**
      * Get all data!
      * @return PDOStatement: fetchAll query
      */
     public static function all() {
-        $sql = static::getSQL();
+        $sql = (new QueryBuilder)
+                ->select()
+                ->from(static::tableName());
 
         return self::query($sql)
-            ->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE);
+            ->fetchAll(
+                PDO::FETCH_CLASS, 'Ngaji\Database\NgajiStdClass', array([
+                    'target_table' => 'accounts',
+                    'property' => 'account',
+                    'self_domain' => 'id',
+                    'target_domain' => 'account_id'
+                ]
+            ));
     }
 
     /**
@@ -196,6 +164,8 @@ abstract class ActiveRecord extends Model {
      * Build the query object by calling QuertBuilder class
      * By the ActiveRecord Model
      *
+     * NO RELATIONS
+     *
      * @return QueryBuilder
      */
     public static function find() {
@@ -280,8 +250,10 @@ abstract class ActiveRecord extends Model {
      * @return PDOStatement
      */
     public static function query($sql, $bindParam = NULL) {
-        $pdo = parent::connect();
+        $pdo = Database::connect();
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        $prepareStatement = null;
 
         try {
             if (is_array($bindParam)) {
@@ -293,7 +265,7 @@ abstract class ActiveRecord extends Model {
         } catch(\Exception $e) {
             print_r($e);
         } finally {
-            parent::disconnect();
+            Database::disconnect();
         }
 
         return $prepareStatement;

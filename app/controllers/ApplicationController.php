@@ -14,6 +14,7 @@
  * @since   1.0.0
  */
 
+use app\models\Members;
 use Ngaji\Http\Request;
 use Ngaji\Http\Response;
 use Ngaji\Routing\Controller;
@@ -23,15 +24,17 @@ use app\models\Accounts;
 class ApplicationController extends Controller {
 
     public static function index() {
-        # if user was login before and session is still valid
-        if (Request::is_authenticated()) {
-            if (Request::is_manager()) {
-                ManagerController::index();
-            }
-        } else {
-            self::login();
-            # Response::redirect('login');
-        }
+//        # if user was login before and session is still valid
+//        if (Request::is_authenticated()) {
+//            if (Request::is_member()) {
+//                MembersController::index();
+//            }
+//        } else {
+//            self::login();
+//            # Response::redirect('login');
+//        }
+
+        print_r(Members::all());
     }
 
     public static function profile($id) {
@@ -41,7 +44,7 @@ class ApplicationController extends Controller {
         # get id account from request header
         $id = Request::get_user('id');
         # fetch user data account
-        $account = Accounts::findByPK($id);
+        $account = Accounts::findOne($id);
 
         print_r($account);
 
