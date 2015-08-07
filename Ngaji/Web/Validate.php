@@ -40,6 +40,15 @@ class Validate {
 	 * @return boolean
 	 */
 	public function numeric($value) {
+		return is_numeric($value);
+	}
+
+	/**
+	 * Check that $value of property is valid int
+	 * @param  mixed  $value
+	 * @return boolean
+	 */
+	public function int($value) {
 		return (filter_var($value, FILTER_VALIDATE_INT)) ? true : false;
 	}
 
@@ -67,7 +76,7 @@ class Validate {
 	 * @param  mixed  $value2
 	 * @return boolean
 	 */
-	public function minRange($value, $value2) {
+	public function min_range($value, $value2) {
 		if (is_numeric($value)) {
 			return (
 				(float)$value >= (float)$value2
@@ -83,7 +92,7 @@ class Validate {
 	 * @param  mixed  $value2
 	 * @return boolean
 	 */
-	public function maxRange($value, $value2) {
+	public function max_range($value, $value2) {
 		if (is_numeric($value)) {
 			return (
 				(float)$value <= (float)$value2
@@ -99,7 +108,7 @@ class Validate {
 	 * @param  mixed  $value2
 	 * @return boolean
 	 */
-	public function minLength($value, $value2) {
+	public function min_length($value, $value2) {
 		$callback = function ($value, $value2) {
 			if ($value2 <= strlen($value)) {
 				return true;
@@ -117,7 +126,7 @@ class Validate {
 	 * @param  mixed  $value2
 	 * @return boolean
 	 */
-	public function maxLength($value, $value2) {
+	public function max_length($value, $value2) {
 		$callback = function ($value, $value2) {
 			if ($value2 >= strlen($value)) {
 				return true;
@@ -147,6 +156,11 @@ class Validate {
 		return (filter_var($value, FILTER_VALIDATE_MAC)) ? true : false;
 	}
 
+    /**
+     * Sanitize string input
+     * @param $value
+     * @return bool
+     */
 	public function string($value) {
 		return (filter_var($value, FILTER_SANITIZE_ENCODED)) ? true : false;
 	}
