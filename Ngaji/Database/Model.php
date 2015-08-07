@@ -10,29 +10,24 @@ use Ngaji\Web\Validate;
  * @since 2.0
  */
 abstract class Model extends Component {
-
-    private $_attributes = [];
+    # model attributer
+    protected $_attributes = [];
+    # validate status of model attributes
     private $_isValid = false;
-    private $_errors=[];
+    # array of error message when validating model attributes
+    private $_errors = [];
     # Ngaji\Web\Validate instance
     private $_validator;
 
-
     /**
      * Constructors.
+     * @param array $modelData the data model array to be applied to this object.
      * @param array $config the configuration array to be applied to this object.
      */
-    public function __construct($config = []) {
-        foreach (static::attributes() as $attribute) {
-            list($property) = $attribute;
-
-            if (is_array($property)) {
-
-            } else {
-                $this->_attributes[$property] = null;
-            }
-        }
+    public function __construct($modelData = [], $config = []) {
         parent::__construct($config);
+        $this->fillAttributes();
+        $this->load($modelData);
         $this->_validator = new Validate();
     }
 
@@ -50,6 +45,38 @@ abstract class Model extends Component {
      * given configuration.
      */
     public function init() {
+    }
+
+    /**
+     * Load attributes into object model
+     * This method is invoked of the constructor after the object is initialized with the
+     * defined attributes.
+     * @see contructor
+     */
+    private function fillAttributes() {
+        foreach (static::attributes() as $attribute) {
+            list($property) = $attribute;
+
+            if (is_array($property)) {
+
+            } else {
+                $this->defineAttribute($property, null);
+            }
+        }
+    }
+
+    /**
+     * Load property into object model
+     * This method is invoked of the constructor after the object is initialized with the
+     * given data.
+     * @param array $modelData the data model array to be applied to this object.
+     * @see contructor
+     */
+    public function load($modelData) {
+        foreach ($modelData as $property => $value) {
+            $this->{$property} = $value;
+        }
+
     }
 
     /**
@@ -117,7 +144,9 @@ abstract class Model extends Component {
 
     public abstract function attributes();
 
-    public abstract function rules();
+    public function rules() {
+        return [];
+    }
 
     /**
      * Validate attributes.
@@ -125,35 +154,56 @@ abstract class Model extends Component {
     public function validate() {
         # before validate callback
         $this->beforeValidate();
-
         $valid = true;
-        /*
-         * Iterate rules of definition
-         */
+        # Iterate rules of definition
         foreach (static::attributes() as $attribute) {
+            /*
+             * array(
+             *     ['id', ['required', 'int', 'auto_increment']],
+             * );
+             *
+             * assign index 0 to $propertyName and index 1 to $scenario
+             */
             list($propertyName, $scenario) = $attribute;
-
             # check if $rule is not an array object
             if (is_array($propertyName)) {
 
             } else {
                 if (!is_array($scenario)) {
-                    if (false === self::validateProperty($scenario, $this->{$propertyName})) {
+                    if (false === self::validateProperty(
+                            $scenario, $this->{$propertyName}
+                        )) {
                         $valid = false;
                         # write error data
                         $this->setError($propertyName, $scenario);
                     }
                 } else {
+                    # FIXME experimental
+                    $is_ai = in_array('auto_increment', $scenario);
                     foreach ($scenario as $key => $filter_scenario) {
+                        # ['required', ... ],
+                        # index: 0 value 'required'
                         if (is_numeric($key)) {
-                            if (false === self::validateProperty($filter_scenario, $this->{$propertyName})) {
+                            if($is_ai && (('required' === $filter_scenario) ||
+                                    ('int' === $filter_scenario) ||
+                                    ('auto_increment' === $filter_scenario)
+                                )) {
+                                continue;
+                            } else if (false === self::validateProperty(
+                                    $filter_scenario, $this->{$propertyName}
+                                )) {
                                 $valid = false;
                                 # write error data
                                 $this->setError($propertyName, $filter_scenario);
                                 break;
                             }
-                        } else {
-                            if (false === self::validateProperty($key, $this->{$propertyName}, $filter_scenario)) {
+                        }
+                        # ['max_length' => 14, ... ],
+                        # index: 'max_length' value: 14
+                        else {
+                            if (false === self::validateProperty(
+                                    $key, $this->{$propertyName}, $filter_scenario
+                                )) {
                                 $valid = false;
                                 # write error data
                                 $this->setError($propertyName, [
@@ -166,18 +216,14 @@ abstract class Model extends Component {
                 }
             }
         }
-
+        # after validate callback
+        $this->afterValidate();
         # if validate was success, return validated data
         if ($valid) {
             $this->_isValid = true;
-            # afterValidate callback
-            $this->afterValidate();
-
             return true;
         } # if validate failure, return false
         else {
-            # afterValidate callback
-            $this->afterValidate();
             return false;
         }
     }
@@ -204,48 +250,16 @@ abstract class Model extends Component {
      * @return bool property validate
      */
     public function validateProperty($filter, $value, $value2 = '') {
-        switch ($filter) {
-            case 'required':
-                return $this->_validator->required($value);
-                break;
-            case 'int':
-                return $this->_validator->numeric($value);
-                break;
-            case 'float':
-                return $this->_validator->float($value);
-                break;
-            case 'string':
-                return $this->_validator->string($value);
-                break;
-            case 'email':
-                return $this->_validator->email($value);
-                break;
-            case 'ip':
-                return $this->_validator->ip($value);
-                break;
-            case 'mac':
-                return $this->_validator->mac($value);
-                break;
-            case 'min_range':
-                return $this->_validator->minRange($value, $value2);
-                break;
-            case 'max_range':
-                return $this->_validator->maxRange($value, $value2);
-                break;
-            case 'min_length':
-                return $this->_validator->minLength($value, $value2);
-                break;
-            case 'max_length':
-                return $this->_validator->maxLength($value, $value2);
-                break;
-            default:
-                if (method_exists($this, $filter)) {
-                    return (call_user_func(
-                        get_class($this) . '::' . $filter, $value)
-                    ) ? true : false;
-                }
-                return false;
-                break;
+        if (method_exists($this->_validator, $filter))
+            return $this->_validator->{$filter}($value, $value2);
+        else {
+            # if validate rules is function callback
+            if (method_exists($this, $filter)) {
+                return (call_user_func(
+                    get_class($this) . '::' . $filter, $value)
+                ) ? true : false;
+            }
+            return false;
         }
     }
 
@@ -281,15 +295,20 @@ abstract class Model extends Component {
      * @param $field : column name
      * @return mixed: array or string
      */
-    public function get_attr($field) {
-        return static::attributes()[$field];
+    public function getAttr($field) {
+        foreach (static::attributes() as $attr) {
+            if (in_array($field, $attr) || (is_array($attr[0]) && in_array($field, $attr[0]))) {
+                return $attr[1];
+            }
+        }
+        return false;
     }
 
     /**
      * Is the model has Primary Key?
      * @return mixed
      */
-    public static function has_PK() {
+    public static function hasPK() {
         $attrs = static::rules();
 
         if (array_key_exists('primary_key', $attrs))
