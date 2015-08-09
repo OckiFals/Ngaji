@@ -80,10 +80,10 @@ class QueryBuilder {
                     $list[] = "$key " . array_keys($value)[0] . " :$key";
 
                     $param .= ', ":' . $key . '":"' . array_values($value)[0] . '"';
-                } else {
-                    $list[] = "$key = :$key";
+                 } else {
+                    $list[] = "$key = :" . str_replace('.', '_', $key);
 
-                    $param .= ', ":' . $key . '":"' . $value . '"';
+                    $param .= ', ":' . str_replace('.', '_', $key) . '":"' . $value . '"';
                 }
             }
 
