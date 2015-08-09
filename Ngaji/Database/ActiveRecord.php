@@ -13,8 +13,8 @@ use Ngaji\Database\Connection as Database;
  */
 abstract class ActiveRecord extends Model {
 
-    public function __construct() {
-        parent::__construct();
+    public function __construct($modelData = []) {
+        parent::__construct($modelData);
     }
 
     /**
@@ -22,17 +22,49 @@ abstract class ActiveRecord extends Model {
      *
      */
     public function save() {
+        if ($this->validate()) {
+            $bindArray = [];
 
+            foreach ($this->_attributes as $attr => $value) {
+                if(!empty($value)) {
+                    $bindArray[':'.$attr] = $value;
+                } else {
+                    $rules = self::getAttr($attr);
+                    if(array_key_exists('default', $rules)) {
+                        $bindArray[':'.$attr] = $rules['default'];
+                    } else {
+                        $bindArray[':'.$attr] = NULL;
+                    }
+
+                }
+            }
+
+            $create = sprintf(
+                "INSERT INTO `%s`(`%s`) VALUES(:%s)", static::tableName(),
+                implode('`, `', array_keys($this->_attributes)),
+                implode(', :', array_keys($this->_attributes))
+            );
+
+            echo "Query SQL yang dihasilkan \n";
+            print $create;
+            echo "\n\nPrepareStatement Bind Array  \n";
+            print_r($bindArray);
+
+            self::query($create, $bindArray)
+                ->execute();
+        } else {
+            print_r($this->getErrors());
+        }
     }
 
     /**
      *
-     * @param $id: primary key
+     * @param $id : primary key
      */
     public static function delete($id) {
         $sql = sprintf(
             "DELETE FROM %s WHERE %s=:id",
-            static::tableName(), self::has_PK()
+            static::tableName(), self::hasPK()
         );
 
         $bindArray = [
@@ -44,18 +76,12 @@ abstract class ActiveRecord extends Model {
 
     /**
      * Get Models SQL Command
-     * You can Override this func. if child model has complex SQL 
+     * You can Override this func. if child model has complex SQL
      */
     public function getSQL() {
-        # TODO
-        if (self::hasRelations())
-            $sql = self::makeRelations();
-        else
-            $sql = (new QueryBuilder)
-                ->select()
-                ->from(static::tableName());
-
-        return $sql;
+        return (new QueryBuilder)
+            ->select()
+            ->from(static::tableName());
     }
 
     /**
@@ -63,19 +89,14 @@ abstract class ActiveRecord extends Model {
      * @return PDOStatement: fetchAll query
      */
     public static function all() {
-        $sql = (new QueryBuilder)
-                ->select()
-                ->from(static::tableName());
+        if (self::hasRelations()) {
+            $initial = self::getRelations();
+        } else {
+            $initial = [];
+        }
 
-        return self::query($sql)
-            ->fetchAll(
-                PDO::FETCH_CLASS, 'Ngaji\Database\NgajiStdClass', array([
-                    'target_table' => 'accounts',
-                    'property' => 'account',
-                    'self_domain' => 'id',
-                    'target_domain' => 'account_id'
-                ]
-            ));
+        return self::query(self::getSQL())
+            ->fetchAll(PDO::FETCH_CLASS, 'Ngaji\Database\NgajiStdClass', $initial);
     }
 
     /**
@@ -86,19 +107,28 @@ abstract class ActiveRecord extends Model {
      */
     public static function findAll($param) {
         $command = static::getSQL();
-        
+
         if (is_array($param)) {
-            $command .= self::get_where($param)['sql'];
-            $param = self::get_where($param)['params'];
+            # get_where sql and param
+            $get_where = self::get_where($param);
+
+            $command .= $get_where['sql'];
+            $param = $get_where['params'];
         } else { # if param is String or QueryBuilder instance
             $command .= $param;
-            $param=[];
+            $param = [];
+        }
+
+        if (self::hasRelations()) {
+            $initial = self::getRelations();
+        } else {
+            $initial = [];
         }
 
         $prepareStatement = self::query($command, $param);
 
         return $prepareStatement
-            ->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE);
+            ->fetchAll(PDO::FETCH_CLASS, 'Ngaji\Database\NgajiStdClass', $initial);
     }
 
     /**
@@ -119,7 +149,7 @@ abstract class ActiveRecord extends Model {
      * @param $param : the array('table-name' => 'value')
      * @return mixed
      */
-    public static function findOne($param=null) {
+    public static function findOne($param = null) {
 
         $command = static::getSQL();
 
@@ -128,28 +158,46 @@ abstract class ActiveRecord extends Model {
          * Eg. $param = array('username' => 'john', 'jobs' => 'PM')
          */
         if (is_array($param)) {
+            $param1 = [];
+            $param2 = [];
+            foreach ($param as $key => $value) {
+                if (self::getAttr($key)) {
+                    $param1[$key] = $value; 
+                } else {
+                    $param2[$key] = $value;
+                }
+            }
+
+            # get_where sql and param
             $sql_where = self::get_where($param);
 
             $command .= $sql_where['sql'];
             $param = $sql_where['params'];
-        }
-        /*
-         * When $param is an integer, find by the PK
+
+            var_dump($param1);
+            var_dump($param2);
+        } /*
+         * When $param is an integer, find by their PK
          */
         else if (is_numeric($param)) {
             $sql_where = self::get_where([
-                self::has_PK() => $param
+                self::hasPK() => $param
             ]);
 
             $command .= $sql_where['sql'];
             $param = $sql_where['params'];
-        }
-        /*
+        } /*
          * When $param is a String or a QueryBuilder instance
          */
         else {
             $command .= $param;
-            $param=[];
+            $param = [];
+        }
+
+        if (self::hasRelations()) {
+            $initial = self::getRelations();
+        } else {
+            $initial = [];
         }
 
         /*
@@ -157,7 +205,8 @@ abstract class ActiveRecord extends Model {
          */
         $prepareStatement = self::query($command, $param);
 
-        return $prepareStatement->fetchObject();
+        return $prepareStatement
+            ->fetchObject('Ngaji\Database\NgajiStdClass', $initial);
     }
 
     /**
@@ -177,53 +226,65 @@ abstract class ActiveRecord extends Model {
     }
 
     /**
-     * Make the relation queries
-     * @return string
+     * Return array config if models has relation defined
+     * @return array
      */
-    public function makeRelations() {
+    public function getRelations() {
         /*
          * Get belongs_to relations from rules() func.
          */
         $belongs_to = self::hasRelations();
 
-        /*
-         * Separate string into an array with delimiter @
-         * from foreign key target table(belongs_to rules)
-         *
-         * example:
-         * ...
-         *  'belongs_to' => [
-         *     # Schedules.id => self.id
-         *      schedules@id' => 'id'
-         *  ]
-         * ...
-         *
-         * Will produce:
-         * array(
-         *    [0] => 'schedules',
-         *    [1] => 'id'
-         * )
-         *
-         */
-        $target_source = explode('@', array_keys($belongs_to)[0]);
+        if (false !== $belongs_to) {
+            /*
+             * Separate string into an array with delimiter @
+             * from foreign key target table(belongs_to rules)
+             *
+             * example:
+             * ...
+             *  'belongs_to' => [
+             *     # Schedules.id => self.id
+             *      schedules@id' => 'id'
+             *  ]
+             * ...
+             *
+             * Will produce:
+             * array(
+             *    [0] => 'schedules',
+             *    [1] => 'id'
+             * )
+             *
+             */
+            $target_source = explode('@', array_keys($belongs_to)[0]);
 
-        $target_table = $target_source[0];
-        # if the domain name is defined, use that domain's name, 'id' otherwise  
-        $target_domain = (array_key_exists(1, $target_source)) ? 
-            $target_source[1] : 'id';
+            $target_table = $target_source[0];
 
-        # this table foreign key 
-        $self_domain = $belongs_to[
-            array_keys($belongs_to)[0]
-        ];
+            /*
+             * This statement does two things:
+             *
+             * - Remove 's' on string when the last of character $target_table contain 's'
+             * - Or let $target_table has default defined value
+             */
+            $property = ('s' === $target_table[strlen($target_table)-1] ) ?
+                'account' : $target_table;
 
-        # eg: select a.*, b.* from accounts a RIGHT join ustadzs b on a.id = b.account_id
-        return sprintf('SELECT `%1$s`.*, `%2$s`.* 
-                FROM `%1$s` 
-                LEFT JOIN `%2$s` 
-                    ON `%1$s`.`%3$s` = `%2$s`.`%4$s`',
-            static::tableName(), $target_table, $self_domain, $target_domain
-        );
+            # if the domain name is defined, use that domain's name, 'id' otherwise
+            $target_domain = (array_key_exists(1, $target_source)) ?
+                $target_source[1] : 'id';
+
+            # this table foreign key
+            $self_domain = $belongs_to[array_keys($belongs_to)[0]];
+
+            return array([
+                'self' => get_called_class(),
+                'target_table' => $target_table,
+                'property' => $property,
+                'self_domain' => $target_domain,
+                'target_domain' => $self_domain
+            ]);
+        } else {
+            return [];
+        }
     }
 
     /**
@@ -262,7 +323,7 @@ abstract class ActiveRecord extends Model {
             } else {
                 $prepareStatement = $pdo->query($sql);
             }
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             print_r($e);
         } finally {
             Database::disconnect();
@@ -314,8 +375,8 @@ abstract class ActiveRecord extends Model {
 
     /**
      * Shortcut to get_object_or_redirect
-     * @param $param:
-     * @param $page: redirect to?
+     * @param $param :
+     * @param $page : redirect to?
      * @return \stdClass
      */
     public static function getOrRedirect($param, $page) {
