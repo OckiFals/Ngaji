@@ -166,7 +166,7 @@ class FormModel extends Component {
                 return $this->validator->required($value);
                 break;
             case 'int':
-                return $this->validator->numeric($value);
+                return $this->validator->int($value);
                 break;
             case 'float':
                 return $this->validator->float($value);
@@ -181,16 +181,16 @@ class FormModel extends Component {
                 return $this->validator->mac($value);
                 break;
             case 'min_range':
-                return $this->validator->minRange($value, $value2);
+                return $this->validator->min_range($value, $value2);
                 break;
             case 'max_range':
-                return $this->validator->maxRange($value, $value2);
+                return $this->validator->max_range($value, $value2);
                 break;
             case 'min_length':
-                return $this->validator->minLength($value, $value2);
+                return $this->validator->min_length($value, $value2);
                 break;
             case 'max_length':
-                return $this->validator->maxLength($value, $value2);
+                return $this->validator->max_length($value, $value2);
                 break;
             default:
                 if (method_exists($this, $filter)) {
