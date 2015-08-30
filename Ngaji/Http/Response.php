@@ -1,5 +1,6 @@
 <?php namespace Ngaji\Http;
 
+use Ngaji\Base\Component;
 use Traversable;
 
 /**
@@ -13,7 +14,7 @@ use Traversable;
  * @author  Ocki Bagus Pratama
  * @since   2.0.0
  */
-class Response implements \ArrayAccess, \Countable, \IteratorAggregate {
+class Response extends Component implements \ArrayAccess, \Countable, \IteratorAggregate {
 
     /**
      * @var int HTTP status code
@@ -33,7 +34,7 @@ class Response implements \ArrayAccess, \Countable, \IteratorAggregate {
     /**
      * @var array HTTP response codes and messages
      */
-    protected static $messages = array(
+    public static $httpStatuses = array(
         //Informational 1xx
         100 => '100 Continue',
         101 => '101 Switching Protocols',
