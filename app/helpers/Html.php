@@ -156,10 +156,17 @@ class Html {
             }
         }
 
-        $tags .= sprintf(
-            '<a href="%s/%s" %s>%s</a>%s',
-            HOSTNAME, ltrim($target, '/'), rtrim($temp), $text, "\n"
-        );
+        if ((null !== strpos($target, 'http')) || (null !== strpos($target, 'www'))) {
+            $tags .= sprintf(
+                '<a href="%s" %s>%s</a>%s',
+                $target, rtrim($temp), $text, "\n"
+            );
+        } else {
+            $tags .= sprintf(
+                '<a href="%s/%s" %s>%s</a>%s',
+                HOSTNAME, ltrim($target, '/'), rtrim($temp), $text, "\n"
+            );
+        }
 
         return $tags;
     }
