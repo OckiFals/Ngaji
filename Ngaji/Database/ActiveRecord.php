@@ -23,34 +23,35 @@ abstract class ActiveRecord extends Model {
      */
     public function save() {
         if ($this->validate()) {
-            $bindArray = [];
+            $bindAttrs = [];
+            $bindParams = [];
 
             foreach ($this->_attributes as $attr => $value) {
-                if(!empty($value)) {
-                    $bindArray[':'.$attr] = $value;
-                } else {
-                    $rules = self::getAttr($attr);
-                    if(array_key_exists('default', $rules)) {
-                        $bindArray[':'.$attr] = $rules['default'];
-                    } else {
-                        $bindArray[':'.$attr] = NULL;
-                    }
 
+                if(!empty($value)) {
+                    if (false !== strpos($value, '@')) {
+                        $bindAttrs[] = substr($value, 1);
+                    } else {
+                        $bindAttrs[] = ":{$attr}";
+                        $bindParams[':'.$attr] = $value;
+                    }
+                } else {
+                    $bindAttrs[] = 'NULL';
                 }
             }
 
             $create = sprintf(
-                "INSERT INTO `%s`(`%s`) VALUES(:%s)", static::tableName(),
+                "INSERT INTO `%s`(`%s`) VALUES(%s)", static::tableName(),
                 implode('`, `', array_keys($this->_attributes)),
-                implode(', :', array_keys($this->_attributes))
+                implode(', ', $bindAttrs)
             );
 
-            echo "Query SQL yang dihasilkan \n";
-            print $create;
-            echo "\n\nPrepareStatement Bind Array  \n";
-            print_r($bindArray);
+//            echo "Query SQL yang dihasilkan \n";
+//            print $create;
+//            echo "\n\nPrepareStatement Bind Array  \n";
+//            print_r($bindParams);
 
-            self::query($create, $bindArray)
+            self::query($create, $bindParams)
                 ->execute();
         } else {
             print_r($this->getErrors());
