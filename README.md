@@ -1,22 +1,8 @@
 # Ngaji Foundation 2.0.1
 
-2.0
-+ Pada versi ini, class diorganisasikan ulang menggunakan namespace
-+ Ditambahkan class helpers Html untuk bekerja lebih nyaman dengan tag-tag HTML
-+ Ditambahkan class Request untuk menampilkan informasi request dari client
-+ Ditambahkan class Response untuk menampilkan informasi response dari web-server
-
-2.0.1
-+ Ditambahkan class QueryBuilder untuk menangani kueri SQL kompleks tanpa melalui Model Class
-+ Ditambahkan function __autoloader() pada class Bootstrap2 untuk menangani eksepsi undefined class.
-  Eksepsi tersebut dibangkitkan ketika meload class yang dibutuhkan, tetapi class tersebut tidak
-  terdaftar pada app/settings.php
-
-  NB: tidak disarankan untuk performa, sebisa mungkin daftarkan class pada settings.php
-
 # Manual penggunaan:
 
-###1. Definisikan web-app path
+###1. Definisikan web-app path(optional)**
    contoh: asumsikan url path untuk project adalah http://ockifals.dev/bisangaji
    maka ubah definisi app root pada index.php menjadi:
    
@@ -30,7 +16,7 @@
    Oleh karenanya mendefinisikan web-app path tidak lagi menjadi suatu keharusan(optional).
    
    
-###2. Ubah dan sesuaikan konfigurasi pada App/setting.php
+###2. Ubah dan sesuaikan konfigurasi pada app/setting.php
    File tersebut merupakan konfigurasi fundamental yang dimuat ketika aplikasi web dijalankan.
    
    **2.1 Konfigurasi database**
@@ -90,7 +76,6 @@
        Sehingga:
        
        <?php namespace app\contoller;
-
        use app\models\Ustadz;
        
        class ControllerName extends Controller {
@@ -104,33 +89,88 @@
 ###3. Sesuaikan route
    Ngaji/Routing/Route.php merupakan class yang bertugas mengarahkan request dari client. 
    Request tersebut akan ditentukan jalurnya dengan memanggil controller yang sesuai.
-   
-   $this->router->map('method', 'uri', function () {
-            panggil controller disini
-        }, '[alias: optional]');
-        
+
+
+    Routing Path Format
+    ---------------------
+
+    Route statik:
+
+        /post
+
+    Route PCRE:
+
+        /post/:id                  => cocok dengan /post/33
+
+    Route PCRE dengan optional-pattern:
+
+        /post/:id(/:title)         => cocok dengan /post/33, /post/33/post%20title
+        /post/:id(\.:format)       => cocok dengan /post/33, /post/33.json .. /post/33.xml
+
+
+   Menambahkan path route
+   -----------------------
+
+   Bentuk umum:
+
+   $mux->add('uri', ['Controller', 'action']/'Controller:action', [option]);
+
+
+   Berdasarkan HTTP method:
+
+   $mux->post('uri', ...)             => hanya menerima method POST
+   $mux->get('uri', ...)              => hanya menerima method GET
+   $mux->put('uri', ...)              => hanya menerima method PUT
+   $mux->delete('uri', ...)           => hanya menerima method DELETE
+   $mux->any('uri', ...)              => menerima semua method
+
+
+   option:
+
+   1. require digunakan untuk memverifikasi pola URI yang dibutuhkan
+
+   'require' => ['parameter' => 'pola preg_match']
+
+   2. default mendefinisikan nilai default dari parameter, jika parameter tidak didefinisikan
+
+   'default' => ['parameter' => nilai]
+
+
    Contoh:
 
-   $this->router->map('GET|POST', '/index.php/login', function () {
-            Controller::login();
-        }, 'login');
-   
-   Penjelasan:
-   Route '/index.php/login' diatas hanya memperbolehkan method GET dan POST. 
-   Ketika route tersebut dipanggil akan dialihkan controller Controller dengan action login.
-   Route tersebut memiliki alias 'login'.
+
+        ```php
+        $mux->add("/", ['app\controllers\ApplicationController', 'index']);
+        $mux->add("/test/:id", 'app\controllers\ApplicationController:test'], [
+            'require' => ['id' => '\d+'],
+            'default' => ['id' => 1]
+        ]);
+        ```
+
    
    NB:
-   1. Nama alias route harus unik
-   2. Semua route harus melalui index.php, dengan pengecualian
-      Benar: /index.php/login tidak benar: /login
-      Route tidak bisa bekerja langsung pada URI /login kecuali mengubah konfigurasi pada .htaccess
+   1. Jangan gunakan $_GET[] untuk mendapatkan data pada parameter prefix.
+   Parameter tersebut secara otomatis dilemparkan ke action router yang bersangkutan.
       
-      Untuk mendefinisikan sendiri route /login tanpa melalui index.php
-      Tambahkan baris kode dibawah pada file .htaccess(hanya untuk web-service Apache2)
-      
-      RewriteRule ^login/?$ index.php/login [QSA,L]
-   
+      Contoh prefix `id` dengan filter '\d+'(integer)
+
+
+    ### Methods
+
+    - `Mux->add( {path}, {callback array or callable object}, { route options })`
+    - `Mux->post( {path}, {callback array or callable object}, { route options })`
+    - `Mux->get( {path}, {callback array or callable object}, { route options })`
+    - `Mux->put( {path}, {callback array or callable object}, { route options })`
+    - `Mux->any( {path}, {callback array or callable object}, { route options })`
+    - `Mux->delete( {path}, {callback array or callable object}, { route options })`
+    - `Mux->mount( {path}, {mux object}, { route options })`
+    - `Mux->length()` returns length of routes.
+    - `Mux->export()` returns Mux constructor via __set_state static method in php code.
+    - `Mux->dispatch({path})` dispatch path and return matched route.
+    - `Mux->getRoutes()` returns routes array.
+    - `Mux::__set_state({object member array})` constructs and returns a Mux object.
+
+
 ###4. Bekerja dengan Html helpers
    **4.1 Html::Load()**
        
@@ -242,12 +282,11 @@
 	]);
 	```
 	
-    **5.3 `Model::findAll()`**
-    
-    
+   **5.3 `Model::findAll()`**
+
 	Mengambil seluruh baris data dengan criteria atau tanpa criteria
 	
-	**5.2.1 Mencari berdasarkan kriteria nilai tertentu**
+	**5.3.1 Mencari berdasarkan kriteria nilai tertentu**
 	```php
 	$data = Ustadz::findAll([
 		'type` => 1,
@@ -287,4 +326,6 @@
 		'username' => 'subali'
 	]);
 	```
+
+	**5.4 Menyimpan record baru
 	

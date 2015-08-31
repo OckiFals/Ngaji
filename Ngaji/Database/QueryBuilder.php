@@ -9,9 +9,10 @@
  * @since  2.0.1
  */
 
+use Ngaji\Base\Component;
 use PDO;
 
-class QueryBuilder {
+class QueryBuilder extends Component {
     private $sql = '';
     private $param = [];
     private $fetch = PDO::FETCH_CLASS;
@@ -21,6 +22,7 @@ class QueryBuilder {
      * Make the instance of the object
      */
     public function __construct() {
+        parent::__construct();
         $this->pdo = Connection::connect();
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }

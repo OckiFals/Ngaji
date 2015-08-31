@@ -1,33 +1,36 @@
 <?php namespace Ngaji\Routing;
+
+use Ngaji\Web\HttpException;
+
 /**
- * Author: Ocki Bagus Pratama
- * Date: 03/04/15
- * Time: 20:54
+ * @author Ocki Bagus Pratama <ocki.bagus.p@gmail.com>
+ * @package Ngaji\Routing
+ * @since 2.1
  */
 
-use app\contollers\ApplicationController as Controller;
-use Ngaji\Http\Response;
-
-
 class Route {
-    private $router;
+    private $route;
 
-    public function __construct($config = []) {
-        $this->router = new AltoRouter();
-        $this->router->setBasePath($config['hostname']);
-        print_r($_GET['url']);
-        call_user_func_array('app\contollers\ApplicationController' . '::' . 'profile', [1231231]);
-        # Main routes
-        $this->router->map('GET', '/', function () {
-            Response::redirect('index.php');
-        }, 'home');
-        $this->router->map('GET', '/index.php', 'app\contollers\ApplicationController::index', 'home_home');
+    public function __construct($basePath) {
+        $mux = new Mux;
+        $mux->setBasePath($basePath);
+        $mux->add("/", ['app\controllers\ApplicationController', 'index']);
+        $mux->add("/test/:id", ['app\controllers\ApplicationController', 'test'], [
+            'require' => ['id' => '\d+'],
+            'default' => ['id' => 1]
+        ]);
 
-        
-
+        $this->route = $mux->dispatch($_SERVER['REQUEST_URI']);
     }
 
     public function getRoute() {
-        return $this->router;
+        return $this->route;
+    }
+
+    public function execute() {
+        if (NULL !== $this->getRoute())
+            echo Executor::execute($this->getRoute());
+        else
+            throw new HttpException(404, 'The requested Page could not be found.');
     }
 }

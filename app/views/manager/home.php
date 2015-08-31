@@ -19,7 +19,7 @@
     </header>
     <!-- Left side column. contains the logo and sidebar -->
     <aside class="main-sidebar">
-        <?= Ngaji\view\View::render('manager/left-sidebar') ?>
+        <? Ngaji\view\View::render('manager/left-sidebar') ?>
     </aside>
 
     <!-- Content Wrapper. Contains page content -->

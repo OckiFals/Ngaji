@@ -33,9 +33,10 @@ class Members extends ActiveRecord {
 
     public function rules() {
         return array(
-            'primary_key' => 'id',
+            'primary_key' => 'account_id',
             'belongs_to' => [
-                'accounts@id' => 'account_id'
+                'accounts@id' => 'account_id',
+                'city@id' => 'city'
             ]
         );
     }

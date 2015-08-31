@@ -10,7 +10,9 @@
 namespace Ngaji\Http;
 
 
-class Session {
+use Ngaji\Base\Component;
+
+class Session extends Component {
 
     private $instance;
 
@@ -18,6 +20,7 @@ class Session {
      * Makes the instance
      */
     public function __construct() {
+        parent::__construct();
         $this->instance = $this;
     }
 

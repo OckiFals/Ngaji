@@ -15,23 +15,32 @@ class Accounts extends ActiveRecord {
 
     public function attributes() {
         return array(
-            'id' => [
-                'integer',
-                'auto_increment',
-                'primary_key'
-            ],
-            'username' => 'varchar_80',
-            'password' => 'varchar_80',
-            'name' => 'integer'
+            ['id', ['required', 'int', 'auto_increment']],
+            ['username', ['required', 'string', 'max_length' => 80, 'validateUsername']],
+            ['password', ['required', 'max_length' => 16]],
+            ['name', 'required'],
+            ['created_at', 'required']
         );
     }
 
     public function rules() {
         return array(
-            'primary_key' => 'id',
-            'belongs_to' => [
-                'accounts@id' => 'account_id'
-            ]
+            'primary_key' => 'id'
         );
+    }
+
+    /**
+     * Function validate callback
+     * @param  string $username get from validate property name(username)
+     * @return bool
+     */
+    public function validateUsername($username) {
+        if (Accounts::findOne(['username' => $username])) {
+            $this->setError('username', 'username must be unique!');
+            return false;
+        }
+        else {
+            return true;
+        }
     }
 }

@@ -1,9 +1,10 @@
 <?php namespace Ngaji\view;
 
 use Exception;
+use Ngaji\Base\Component;
 
-class View {
-    static function render($file, $variables = array(), $template_tags = array()) {
+class View extends Component {
+    static function render($file, $variables = array()) {
         try {
             $template = ABSPATH . '/view/' . strtolower($file) . '.php';
 

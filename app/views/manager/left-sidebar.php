@@ -10,7 +10,7 @@
             ?>
         </div>
         <div class="pull-left info">
-            <p><?= Ngaji\Http\Request::get_user('name') ?></p>
+            <p><?= Ngaji\Http\Request::user('name') ?></p>
 
             <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
         </div>

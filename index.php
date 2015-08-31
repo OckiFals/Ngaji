@@ -11,9 +11,9 @@ define('ABSPATH', dirname(__FILE__));
  */
 define('HOSTNAME', '/' . basename(__DIR__));
 
-require('app/bootstrap2.php');
+require('app/bootstrap.php');
 # load config
 $config = require('app/settings.php');
 
 # start the app
-(new bootstrap2)->setConfig($config)->start();
+(new bootstrap)->setConfig($config)->start();

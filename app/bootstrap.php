@@ -1,65 +1,58 @@
 <?php
 /**
- * Bootstrap
+ * Bootstrap2
  *
  * Start the app!
  *
- * @package App
+ * @package app
  * @author  Ocki Bagus Pratama
- * @since   1.0.0
+ * @since   2.0.1
  */
 
-use app\contollers;
 use Ngaji\Database\Connection;
 use Ngaji\Routing\Route;
+use Ngaji\Base\UnknownClassException;
 
-session_start();
 
 class bootstrap {
 
-    public static $config;
+    protected $config;
 
-    public static function start() {
+    public function __construct($config = null) {
+        $this->config = $config;
 
-        # load config
-        $config = include(__DIR__ . '/settings.php');
-        self::$config = $config;
+        # test
+        $autoloader = function ($class) {
+            $this->__autoloader($class);
+        };
 
-        self::loadClasses();
-
-        # bind array $config ke class Connection
-        Connection::setConfig(self::$config['db']);
-
-        # make a route
-        $router = new Route(self::$config);
-
-        # match the current request
-        $match = $router->getRoute()->match();
-        if ($match && is_callable($match['target'])) {
-            call_user_func_array($match['target'], $match['params']);
-        } else {
-            # no route was matched
-            header($_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found');
-            echo "<h3>No Route was matched with</h3>";
-            echo "<table>";
-            echo "<tr>";
-            echo "<th>Method</th>";
-            echo "<th>Route</th>";
-            echo "</tr>";
-            // echo "<td>Controller</td>";
-            foreach ($router->getRoute()->getRoutes() as $route) {
-                print("<tr>");
-                print("<td> $route[0] </td>");
-                print("<td> $route[1] </td>");
-                print("<tr>");
-            }
-            echo "</table>";
-        }
+        spl_autoload_register($autoloader);
     }
 
-    public static function loadClasses() {
-        $classes = self::$config['class'];
-        $models = self::$config['models'];
+    public function setConfig($config = null) {
+        $this->config = $config;
+        return $this;
+    }
+
+    public function start() {
+        # start PHP session
+        session_start();
+
+        $this->loadClasses();
+        # FIXME
+        # require('Ngaji/Routing/Router.php');
+
+        # bind array $config ke class Connection
+        Connection::setConfig($this->config['db']);
+
+        # make a route
+        $router = new Route($this->config['hostname']);
+        $router->execute();
+    }
+
+    public function loadClasses() {
+        $classes = $this->config['class'];
+        $models = $this->config['models'];
 
         try {
             # load classes
@@ -70,7 +63,7 @@ class bootstrap {
                 if (file_exists($class))
                     require("$class");
                 else
-                throw new Exception('Class ' . $class . ' not found!');
+                    new UnknownClassException('Class ' . $class . ' not found! Check your settings.php');
             }
 
             # load models
@@ -81,11 +74,30 @@ class bootstrap {
                 if (file_exists("app/models/{$model}.php"))
                     require("app/models/{$model}.php");
                 else
-                    throw new Exception('ModelClass ' . $model . ' not found!');
+                    new UnknownClassException('ModelClass ' . $model . ' not found!');
             }
 
         } catch (Exception $e) {
-            echo $e->getMessage();
+            die($e->getMessage());
+            # die($e->getTraceAsString());
+        }
+    }
+
+    /**
+     * Load undefined class automatically
+     * @since 2.0.1
+     * @param $class : class name(automatic define by PHP)
+     * @throws \Ngaji\Base\UnknownClassException
+     */
+    public function __autoloader($class) {
+        $full_class_path = sprintf('%s.php', str_replace('\\', '/', $class));
+        if (file_exists($full_class_path))
+            require($full_class_path);
+        else {
+            throw new UnknownClassException(
+                "Class: $full_class_path not found!\n" .
+                "use Ngaji/bla-bla \n"
+            );
         }
     }
 }

@@ -49,18 +49,27 @@ abstract class Model extends Component {
 
     /**
      * Load attributes into object model
+     * If attribute has default value, set that value currently
      * This method is invoked of the constructor after the object is initialized with the
      * defined attributes.
      * @see contructor
      */
     private function fillAttributes() {
         foreach (static::attributes() as $attribute) {
-            list($property) = $attribute;
+            if (count($attribute) !== 2)
+                throw new \Exception("Attribute: `" . $attribute[0] . '` must have rules definiton on it!', 1);
+                
+
+            list($property, $rules) = $attribute;
 
             if (is_array($property)) {
 
             } else {
-                $this->defineAttribute($property, null);
+                if (array_key_exists('default', $rules)) {
+                    $this->defineAttribute($property, $rules['default']);
+                } else {
+                    $this->defineAttribute($property, null);
+                }
             }
         }
     }
@@ -250,17 +259,19 @@ abstract class Model extends Component {
      * @return bool property validate
      */
     public function validateProperty($filter, $value, $value2 = '') {
-        if (method_exists($this->_validator, $filter))
+        if (method_exists($this->_validator, $filter)) {
             return $this->_validator->{$filter}($value, $value2);
-        else {
+        } else if ('default' === $filter) {
+            # TODO
+        } else {
             # if validate rules is function callback
             if (method_exists($this, $filter)) {
                 return (call_user_func(
                     get_class($this) . '::' . $filter, $value)
                 ) ? true : false;
             }
-            return false;
         }
+        return false;
     }
 
     /**

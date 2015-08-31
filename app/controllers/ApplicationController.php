@@ -34,7 +34,17 @@ class ApplicationController extends Controller {
 //            # Response::redirect('login');
 //        }
 
-        print_r(Members::all());
+        // # Create new account
+        // $new = new Accounts();
+        // $new->username = 'test';
+        // $new->password = 'admin';
+        // $new->name = 'ocki bagus';
+        // $new->created_at = 'sekarang';
+
+        // $new->save();
+        // print_r($new);
+
+        return 'Welcome to Ngaji 2.1!';
     }
 
     public static function profile($id) {
@@ -42,7 +52,7 @@ class ApplicationController extends Controller {
 
         echo $id;
         # get id account from request header
-        $id = Request::get_user('id');
+        $id = Request::user('id');
         # fetch user data account
         $account = Accounts::findOne($id);
 
@@ -51,12 +61,12 @@ class ApplicationController extends Controller {
         Response::render('hello profile');
     }
 
-    public static function test($id=0) {
+    public static function test($id) {
         echo 'test';
         print_r($id);
     } 
 
     public static function error404() {
-        echo '404 Not Found';
+        return '404 Not Found';
     }
 }

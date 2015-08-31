@@ -5,6 +5,7 @@ use Ngaji\Database\ActiveRecord;
 class YourModel extends ActiveRecord {
 
     public function __construct($className=__CLASS__) {
+        parent::__construct();
         class_parents($className);
     }
 

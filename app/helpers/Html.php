@@ -54,7 +54,7 @@ class Html {
         return $tags;
     }
 
-    /**
+        /**
      * If request for is a CSS file
      * Called by load function
      * @param $fileName : file name
@@ -66,6 +66,8 @@ class Html {
             $tags = sprintf('<link rel="stylesheet" href="%s/%s">', HOSTNAME, "assets/{$fileName}");
         else if (file_exists(ABSPATH . "/assets/css/{$fileName}"))
             $tags = sprintf('<link rel="stylesheet" href="%s/%s">', HOSTNAME, "assets/css/{$fileName}");
+        else if (strpos($fileName, 'http') !== false)
+            $tags = sprintf('<link rel="stylesheet" href="%s">', $fileName);
         else
             print('<strong>CSS file is not found in ' . ABSPATH . "/assets/css/{$fileName}!</strong>");
 
@@ -84,6 +86,8 @@ class Html {
             $tags = sprintf('<script src="%s/%s" type="text/javascript"></script>', HOSTNAME, "assets/$fileName");
         else if (file_exists(ABSPATH . "/assets/js/$fileName"))
             $tags = sprintf('<script src="%s/%s" type="text/javascript"></script>', HOSTNAME, "assets/js/$fileName");
+        else if (strpos($fileName, 'http') !== false)
+            $tags = sprintf('<script src="%s" type="text/javascript"></script>', $fileName);
         else
             print('<strong>JS file is not found in ' . ABSPATH . "/assets/js/{$fileName}!</strong>");
 
@@ -102,11 +106,11 @@ class Html {
             /* <img src="<?= HOSTNAME ?>/assets/img/avatar.png" class="user-image" alt="User Image"/> */
             // $tags = sprintf('<img src="%s/%s" ', HOSTNAME, "assets/$fileName");
             $target = HOSTNAME . "/assets/$fileName";
-        } else if (file_exists(ABSPATH . "/assets/img/$fileName")) {
+        } else if (file_exists(ABSPATH . "/assets/images/$fileName")) {
             // $tags = sprintf('<img src="%s/%s" ', HOSTNAME, "assets/img/$fileName");
-            $target = HOSTNAME . "/assets/img/$fileName";
+            $target = HOSTNAME . "/assets/images/$fileName";
         } else {
-            print('<strong>Image file is not found in ' . ABSPATH . "/assets/img/{$fileName}!</strong>");
+            print('<strong>Image file is not found in ' . ABSPATH . "/assets/images/{$fileName}!</strong>");
             return '';
         }
 
@@ -176,17 +180,33 @@ class Html {
 
     public static function button($text, $attrs=[]) {
         return sprintf('<button %s>%s</button>',
-            self::genererate_properties($attrs), "\n",
+            self::genererate_properties($attrs) . "\n",
             $text
         );
     }
 
+    /**
+     * Custom for font awesome icon
+     * @param $icon
+     * @param $text
+     * @return string
+     */
+    public static function fa($icon, $text) {
+        # <i class="fa fa-dashboard"></i> Home
+        return self::italic('', ['class' => "fa $icon"]) . " $text";
+    }
     ############################# /LINK $ TYPOGRAFI #############################
 
     ################################# FORM ###################################
     public static function form_begin($action='', $method='POST', $attrs = []) {
+        if (empty($action))
+            return sprintf(
+                '<form action="" method="%s" %s>%s',
+                $method, self::genererate_properties($attrs), "\n"
+            );
+
         return sprintf(
-            '<form action=%s/%s method=%s %s>%s',
+            '<form action="%s/%s" method="%s" %s>%s',
             HOSTNAME, $action, $method,
             self::genererate_properties($attrs), "\n"
         );
@@ -211,5 +231,19 @@ class Html {
         }
 
         return $temp;
+    }
+
+    /**
+     * Escape if string contain HTML tags/command
+     * Prevent the XSS attack
+     * @param $string
+     * @return string
+     */
+    public static function escape($string) {
+        $clear_string = addslashes($string);
+        $clear_string = htmlspecialchars($clear_string);
+        $clear_string = htmlentities($clear_string);
+
+        return $clear_string;
     }
 }
