@@ -1,6 +1,8 @@
 <?php namespace Ngaji\Http;
 
 use ArrayAccess;
+use Ngaji\Base\Component;
+use Ngaji\Base\UnknownPropertyException;
 
 /**
  * Ngaji HTTP Request
@@ -18,7 +20,7 @@ use ArrayAccess;
  * @property Integer type
  * @property String type_display
  */
-class Request implements ArrayAccess {
+class Request extends Component implements ArrayAccess {
     const METHOD_HEAD = 'HEAD';
     const METHOD_GET = 'GET';
     const METHOD_POST = 'POST';
@@ -35,7 +37,7 @@ class Request implements ArrayAccess {
     const ADMIN = 1;
     const USTADZ = 2;
     const MEMBER = 3;
-
+    # method call
     private $method_call;
 
     #  Location for overloaded data
@@ -44,9 +46,11 @@ class Request implements ArrayAccess {
     /**
      * @param string $method
      */
-    public function __construct($method='') {
-        if (isset($method))
+    public function __construct($method = '') {
+        parent::__construct();
+        if (isset($method)) {
             $this->method_call = $method;
+        }
     }
 
     /**
@@ -68,18 +72,19 @@ class Request implements ArrayAccess {
      * Usage:
      * Request::GET('example');
      * Or
-     * Request::GET()->example
+     * Request::GET() to gets all $_GET data
      *
      * @param null $key post request key name
      * @return String|Request
      */
-    public static function GET($key=null) {
+    public static function GET($key = null) {
         if ($key) {
             return (array_key_exists($key, $_GET)) ?
                 $_GET[$key] : null;
+        } else {
+            # return alls data
+            return $_GET;
         }
-
-        return (new Request(self::METHOD_GET));
     }
 
     /**
@@ -93,18 +98,19 @@ class Request implements ArrayAccess {
      * Usage:
      * Request::POST('example');
      * Or
-     * Request::POST()->example
+     * Request::POST() to gets all $_POST data
      *
      * @param null $key post request key name
      * @return String|Request
      */
-    public static function POST($key=null) {
+    public static function POST($key = null) {
         if ($key) {
             return (array_key_exists($key, $_POST)) ?
                 $_POST[$key] : null;
+        } else {
+            # return alls data
+            return $_POST;
         }
-
-        return (new Request(self::METHOD_POST));
     }
 
     /**
@@ -118,19 +124,19 @@ class Request implements ArrayAccess {
      * Usage:
      * Request::FILES('example', 'key');
      * Or
-     * Request::FILES('example')->key
+     * Request::FILES('example') to gets all $_FILES['example'] data
      *
      * @param $name
      * @param null $key post request key name
-     * @return Request|String
+     * @return Request|String|null
      */
-    public static function FILES($name, $key=null) {
+    public static function FILES($name, $key = null) {
         if ($key) {
             return (array_key_exists($key, $_FILES[$name])) ?
                 $_FILES[$name][$key] : null;
+        } else {
+            return $_FILES[$name];
         }
-
-        return (new Request(self::METHOD_FILES));
     }
 
     /**
@@ -159,46 +165,53 @@ class Request implements ArrayAccess {
 
     /**
      * Get the session info
-     * @param bool $field
-     * @return mixed : array and string
+     *
+     * Usage:
+     * Request::user(field);
+     *
+     * Fields:
+     * id
+     * username
+     * name
+     * type
+     * type-display
+     *
+     * @param String $field
+     * @return mixed array | string
+     * @throws UnknownPropertyException if try to gets undefined user data
      */
-    public static function get_user($field = false) {
+    public static function user($field='') {
 
         if (!Request::is_authenticated())
             return false;
 
         $session = new Session();
-        # if $field is not define, return all
-        if (!$field) {
-            return $session->get('id_account');
-        } # return the specific value of the _SESSION
-        else {
-            $user_data = explode('|', $session->get('id_account'));
-            switch ($field) {
-                case 'username':
-                    $index = 1;
-                    break;
-                case 'name':
-                    $index = 2;
-                    break;
-                case 'type':
-                    $index = 3;
-                    break;
-                case 'type-display':
-                    switch ($user_data[3]) {
-                        case 1:
-                            return "Admin";
-                        case 2:
-                            return "Ustadz";
-                        case 3:
-                            return "Member";
-                    }
-                default:
-                    $index = 0;
-                    break;
-            }
-            return $user_data[$index];
+        $user_data = explode('|', $session->get('id_account'));
+
+        switch ($field) {
+            case '':
+                return $user_data;
+            case 'id':
+                return $user_data[0];
+            case 'username':
+                return $user_data[1];
+            case 'name':
+                return $user_data[2];
+            case 'type':
+                return $user_data[3];
+            case 'type-display':
+                if (1 === $user_data[3])
+                    return 'Admin';
+                else if (2 === $user_data[3])
+                    return 'Ustadz';
+                else
+                    return 'Member';
+            default:
+                throw new UnknownPropertyException(
+                    'Getting unknown property: `' . $field . '` when using Request::user'
+                );
         }
+
     }
 
     /**
@@ -206,7 +219,7 @@ class Request implements ArrayAccess {
      * @return bool
      */
     public static function is_admin() {
-        return 1 == self::get_user('type');
+        return 1 == self::user('type');
     }
 
     /**
@@ -214,7 +227,7 @@ class Request implements ArrayAccess {
      * @return bool
      */
     public static function is_ustadz() {
-        return 2 == self::get_user('type');
+        return 2 == self::user('type');
     }
 
     /**
@@ -222,27 +235,8 @@ class Request implements ArrayAccess {
      * @return bool
      */
     public static function is_member() {
-        return 3 == self::get_user('type');
+        return 3 == self::user('type');
     }
-
-    public static function user() {
-
-        if (!Request::is_authenticated())
-            die("There are no auth account!");
-
-        $session = new Session();
-
-        $data = explode('|', $session->get('id_account'));
-
-        $request = new Request();
-        $request->data['id'] = $data[0];
-        $request->data['username'] = $data[1];
-        $request->data['name'] = $data[2];
-        $request->data['type'] = $data[3];
-
-        return $request;
-    }
-
 
     /**
      * Set variable value with magic set method
@@ -260,20 +254,14 @@ class Request implements ArrayAccess {
      */
     public function __get($name) {
         if ($this->method_call == self::METHOD_POST) {
-
             return (array_key_exists($name, $_POST)) ?
                 $_POST[$name] : null;
-
         } else if ($this->method_call == self::METHOD_GET) {
-
             return (array_key_exists($name, $_GET)) ?
                 $_GET[$name] : null;
-
         } else if ($this->method_call == self::METHOD_FILES) {
-
             return (array_key_exists($name, $_FILES)) ?
                 $_FILES[$name] : null;
-
         } else if (array_key_exists($name, $this->data)) {
             return $this->data[$name];
         }
