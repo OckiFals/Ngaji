@@ -1,6 +1,5 @@
-<?php namespace Ngaji\Database;
+<?php namespace Ngaji\Base;
 
-use Ngaji\Base\Component;
 use Ngaji\Web\Validate;
 
 /**
@@ -58,7 +57,7 @@ abstract class Model extends Component {
         foreach (static::attributes() as $attribute) {
             if (count($attribute) !== 2)
                 throw new \Exception("Attribute: `" . $attribute[0] . '` must have rules definiton on it!', 1);
-                
+
 
             list($property, $rules) = $attribute;
 
@@ -263,6 +262,7 @@ abstract class Model extends Component {
             return $this->_validator->{$filter}($value, $value2);
         } else if ('default' === $filter) {
             # TODO
+            return true;
         } else {
             # if validate rules is function callback
             if (method_exists($this, $filter)) {
