@@ -1,17 +1,33 @@
 <?php namespace Ngaji\view;
 
+/**
+ * View
+ *
+ * @package Ngaji/View
+ * @author  Ocki Bagus Pratama
+ * @since   1.0.0
+ */
+
 use Exception;
-use Ngaji\Base\Component;
 
-class View extends Component {
-    static function render($file, $variables = array()) {
+class View {
+
+    /**
+     * Render the page
+     * @param  string $file          template name
+     * @param  array  $variables     variables data
+     * @param  array  $template_tags null
+     */
+    public static function render($file, $variables = array(), $template_tags = array()) {
         try {
-            $template = ABSPATH . '/view/' . strtolower($file) . '.php';
 
+            $template = ABSPATH . '/app/views/' . strtolower($file) . '.php';
             if (!file_exists($template))
-                $template = ABSPATH . '/app/views/' . strtolower($file) . '.php';
-            elseif (!file_exists($template))
                 throw new Exception('Template ' . $template . ' not found!');
+
+            # set the default title as the name of the function being called
+            if (!array_key_exists('title', $variables))
+                $variables['title'] = ucfirst(debug_backtrace()[1]['function']);
 
             # extract each key into variables and assign the value with them
             extract($variables);
@@ -26,7 +42,7 @@ class View extends Component {
         }
     }
 
-    static function makeHead() {
+    public static function makeHead() {
         ob_start();
         include(ABSPATH . "/template/head.php");
         $renderedView = ob_get_clean();
@@ -34,7 +50,7 @@ class View extends Component {
         return $renderedView;
     }
 
-    static function makeHeader() {
+    public static function makeHeader() {
         ob_start();
         include(ABSPATH . "/template/header.php");
         $renderedView = ob_get_clean();
@@ -42,7 +58,7 @@ class View extends Component {
         return $renderedView;
     }
 
-    static function makeFooter() {
+    public static function makeFooter() {
         ob_start();
         include(ABSPATH . "/template/footer.php");
         $renderedView = ob_get_clean();

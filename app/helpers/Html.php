@@ -156,7 +156,7 @@ class Html {
             }
         }
 
-        if ((null !== strpos($target, 'http')) || (null !== strpos($target, 'www'))) {
+        if ((false !== strpos($target, 'http')) || (false !== strpos($target, 'www'))) {
             $tags .= sprintf(
                 '<a href="%s" %s>%s</a>%s',
                 $target, rtrim($temp), $text, "\n"

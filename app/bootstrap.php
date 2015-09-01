@@ -95,8 +95,7 @@ class bootstrap {
             require($full_class_path);
         else {
             throw new UnknownClassException(
-                "Class: $full_class_path not found!\n" .
-                "use Ngaji/bla-bla \n"
+                "Class: $full_class_path not found. Namespace missing?"
             );
         }
     }

@@ -47,9 +47,7 @@ class Executor {
 
         // XXX:
 
-        $vars = isset($options['vars'])
-            ? $options['vars']
-            : array();
+        $vars = isset($options['vars']) ? $options['vars'] : array();
 
         $arguments = array();
         foreach ($rps as $param) {

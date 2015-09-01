@@ -1,9 +1,6 @@
 <?php namespace Ngaji\Routing;
 
 use App\models\Accounts;
-use app\models\Admins;
-use app\models\Member;
-use app\models\Ustadz;
 use Ngaji\Http\Request;
 use Ngaji\Http\Response;
 use Ngaji\Http\Session;
@@ -35,22 +32,7 @@ class Controller {
         ]);
 
         if ($data) { # validate was successed
-
-            /*
-             * Custom, originally not come from Ngaji Framework
-             */
-            switch ($data->type) {
-                case 1:
-                    $data = Admins::findOne($data->id);
-                    break;
-                case 2:
-                    $data = Ustadz::findOne($data->id);
-                    break;
-                case 3:
-                    $data = Member::findOne($data->id);
-            }
-
-
+            $data = Accounts::findOne($data->id);
             # Set a session ID
             $account = array(
                 $data->id,
@@ -83,9 +65,9 @@ class Controller {
          * If role defined as int objects
          */
         if (is_int($role)) {
-            $type = Request::get_user('type');
+            $type = Request::user('type');
         } else { # if role defined as String objects
-            $type = strtolower(Request::get_user('type-display'));
+            $type = strtolower(Request::user('type-display'));
         }
         
         /*

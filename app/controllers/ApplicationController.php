@@ -8,65 +8,70 @@
  * like access the index and login page.
  *
  * @package app/controllers
- * @author  Ocki Bagus Pratama
- * @date    14/02/15
- * @time    14:09
- * @since   1.0.0
  */
 
-use app\models\Members;
+use app\models\LoginForm;
 use Ngaji\Http\Request;
 use Ngaji\Http\Response;
+use Ngaji\Http\Session;
 use Ngaji\Routing\Controller;
-use app\models\Accounts;
-
+use Ngaji\view\View;
 # use Response::render() func. to include template without passing array data
 class ApplicationController extends Controller {
 
-    public static function index() {
-//        # if user was login before and session is still valid
-//        if (Request::is_authenticated()) {
-//            if (Request::is_member()) {
-//                MembersController::index();
-//            }
-//        } else {
-//            self::login();
-//            # Response::redirect('login');
-//        }
-
-        // # Create new account
-        // $new = new Accounts();
-        // $new->username = 'test';
-        // $new->password = 'admin';
-        // $new->name = 'ocki bagus';
-        // $new->created_at = 'sekarang';
-
-        // $new->save();
-        // print_r($new);
-
-        return 'Welcome to Ngaji 2.1!';
+    public function index() {
+        View::render('home');
     }
 
-    public static function profile($id) {
-        # self::login_required();
+    public function login() {
+        if ("POST" === Request::method()) {
+            $form = new LoginForm;
+            # loads all POST data
+            $form->load(Request::POST());
 
-        echo $id;
-        # get id account from request header
-        $id = Request::user('id');
-        # fetch user data account
-        $account = Accounts::findOne($id);
+            if ($form->validate() && self::auth($form->username, $form->password)) {
+                /*
+                 * auth using parent::auth
+                 *
+                 * Use $form->clean_data['key'] to escaping input data
+                 * self::auth($form->clean_data['username'], $form->clean_data['password']);
+                 */
+                Response::redirect('');
+            } else {
+                # push a flash message
+                Session::push('flash-message', 'Data yang Anda masukkan tidak valid!');
 
-        print_r($account);
+                View::render('login');
+            }
 
-        Response::render('hello profile');
+        } else {
+            $title = 'My Company Login';
+            View::render('login', [
+                'title' => $title
+            ]);
+        }
     }
 
-    public static function test($id) {
-        echo 'test';
-        print_r($id);
-    } 
+    /**
+     * Logout
+     * @url /logout
+     */
+    public static function logout() {
+        $session = new Session();
 
-    public static function error404() {
+        if ($session->has('id_account'))
+            $session->delete('id_account');
+
+        $session->destroy();
+
+        Response::redirect('');
+    }
+
+    public function test($id) {
+        return "Test $id";
+    }
+
+    public function error404() {
         return '404 Not Found';
     }
 }

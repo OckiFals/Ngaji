@@ -10,7 +10,7 @@ use PDO;
 use PDOException;
 
 class Connection {
-    private static $dbDriver;
+    public static $dbDriver;
     public static $dbName;
     private static $dbHost;
     private static $dbUsername;

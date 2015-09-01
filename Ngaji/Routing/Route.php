@@ -15,6 +15,15 @@ class Route {
         $mux = new Mux;
         $mux->setBasePath($basePath);
         $mux->add("/", ['app\controllers\ApplicationController', 'index']);
+        $mux->add("/login", ['app\controllers\ApplicationController', 'login']);
+        $mux->add("/logout", ['app\controllers\ApplicationController', 'logout']);
+
+        # another ways to define controller action
+        $mux->add("/accounts", 'app\controllers\AccountsController:index');
+        $mux->add("/accounts/add", ['app\controllers\AccountsController', 'add']);
+        $mux->add("/accounts/delete/:id", ['app\controllers\AccountsController', 'delete']);
+
+
         $mux->add("/test/:id", ['app\controllers\ApplicationController', 'test'], [
             'require' => ['id' => '\d+'],
             'default' => ['id' => 1]

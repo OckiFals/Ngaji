@@ -4,9 +4,8 @@ use Ngaji\Database\ActiveRecord;
 
 class YourModel extends ActiveRecord {
 
-    public function __construct($className=__CLASS__) {
-        parent::__construct();
-        class_parents($className);
+    public function __construct($datamodel = []) {
+        parent::__construct($datamodel);
     }
 
     public function tableName() {
@@ -15,17 +14,16 @@ class YourModel extends ActiveRecord {
 
     public function attributes() {
         return array(
-            # example attributes
-            'id' => [
-                'integer',
-                'auto_increment',
-                'primary_key'
-            ],
-            'name' => 'varchar_80',
-            'slug' => 'varchar_80',
-            'locality' => 'integer',
-            'price' => 'double',
-            'foto' => 'varchar_100'
+            ['column_name', ['column_rule 1', 'column_rule n']],
+
+            /*
+             * Example
+             */
+            ['id', ['required', 'int', 'auto_increment']],
+            ['username', ['required', 'min_length' => 4, 'max_length' => 25]],
+            ['type', ['required', 'default' => '1']],
+            /* Use identifier @ if default is SQL Command */
+            ['created_at', ['nullable', 'default' => '@CURRENT_TIMESTAMP']]
         );
     }
 

@@ -1,14 +1,36 @@
-<?php
-/**
- * Created by PhpStorm.
- * User: returnFALSE
- * Date: 31/08/15
- * Time: 23:45
- */
+<?php namespace app\models;
 
-namespace app\models;
+use Ngaji\Web\FormModel;
 
+class LoginForm extends FormModel {
 
-class LoginForm {
+    public $username;
+    public $password;
 
+    public function rules() {
+        return array(
+            ['username', 'required'],
+            ['password', 'required']
+        );
+    }
+
+    /**
+     * berforeValidate callback
+     * inherit from parent
+     */
+    public function beforeValidate() {
+        # write code here
+    }
+
+    /**
+     * afterValidate callback
+     * inherit from parent
+     */
+    public function afterValidate() {
+        if ($this->isValid()) {
+            # echo 'sukses';
+        } else {
+            # echo 'gagal';
+        }
+    }
 }

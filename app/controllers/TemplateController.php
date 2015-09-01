@@ -16,9 +16,10 @@ use Ngaji\Routing\Controller;
 # use Response::render() func. to include template without passing array data
 class YourController extends Controller {
 
-    public static function index() {
+    public function index() {
         # use Response::render(string, false) to deactive HTML auto escaping
-        Response::render('Hello World!');
+        # Response::render('Hello World!');
+        return 'Hello world;';
     }
 
 }

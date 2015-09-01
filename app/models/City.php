@@ -10,7 +10,7 @@ class City extends ActiveRecord {
 	public function attributes() {
 		return array(
 			['id', ['required', 'int', 'auto_increment']],
-			['name', ['required', 'string']
+			['name', ['required', 'string']]
 		);
 	}
 

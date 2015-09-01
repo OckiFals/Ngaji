@@ -154,6 +154,19 @@ class FormModel extends Component {
     }
 
     /**
+     * Get sanitized property
+     * @param  string $name
+     * @return mixed
+     */
+    public function clean_data($name) {
+        if (property_exists($this, $name)) {
+            return \Html::escape($this->{$name});
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Get Validate Filter
      * @param  String|array $filter
      * @param  mixed $value form data
@@ -161,46 +174,20 @@ class FormModel extends Component {
      * @return mixed
      */
     private function getValidateFilter($filter, $value, $value2 = '') {
-        switch ($filter) {
-            case 'required':
-                return $this->validator->required($value);
-                break;
-            case 'int':
-                return $this->validator->int($value);
-                break;
-            case 'float':
-                return $this->validator->float($value);
-                break;
-            case 'email':
-                return $this->validator->email($value);
-                break;
-            case 'ip':
-                return $this->validator->ip($value);
-                break;
-            case 'mac':
-                return $this->validator->mac($value);
-                break;
-            case 'min_range':
-                return $this->validator->min_range($value, $value2);
-                break;
-            case 'max_range':
-                return $this->validator->max_range($value, $value2);
-                break;
-            case 'min_length':
-                return $this->validator->min_length($value, $value2);
-                break;
-            case 'max_length':
-                return $this->validator->max_length($value, $value2);
-                break;
-            default:
-                if (method_exists($this, $filter)) {
-                    return (call_user_func(
-                        get_class($this) . '::' . $filter, $value)
-                    ) ? true : false;
-                }
-                return false;
-                break;
+        if (method_exists($this->validator, $filter)) {
+            return $this->validator->{$filter}($value, $value2);
+        } else if ('default' === $filter) {
+            # TODO
+            return true;
+        } else {
+            # if validate rules is function callback
+            if (method_exists($this, $filter)) {
+                return (call_user_func(
+                    get_class($this) . '::' . $filter, $value)
+                ) ? true : false;
+            }
         }
+        return false;
     }
 
     /**

@@ -2,6 +2,7 @@
 
 use PDO;
 use PDOStatement;
+use Ngaji\Base\Model;
 use Ngaji\Http\Response;
 use Ngaji\Database\Connection as Database;
 
@@ -46,13 +47,14 @@ abstract class ActiveRecord extends Model {
                 implode(', ', $bindAttrs)
             );
 
-//            echo "Query SQL yang dihasilkan \n";
-//            print $create;
-//            echo "\n\nPrepareStatement Bind Array  \n";
-//            print_r($bindParams);
+            /*echo "Query SQL yang dihasilkan \n";
+            print $create;
+            echo "\n\nPrepareStatement Bind Array  \n";
+            print_r($bindParams);
 
-            self::query($create, $bindParams)
-                ->execute();
+            exit();*/
+
+            self::query($create, $bindParams);
         } else {
             print_r($this->getErrors());
         }
@@ -174,9 +176,6 @@ abstract class ActiveRecord extends Model {
 
             $command .= $sql_where['sql'];
             $param = $sql_where['params'];
-
-            var_dump($param1);
-            var_dump($param2);
         } /*
          * When $param is an integer, find by their PK
          */

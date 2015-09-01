@@ -2,11 +2,19 @@
 
 use Ngaji\Database\ActiveRecord;
 
+/**
+ * Class Accounts
+ * @package app\models
+ * @property int $id
+ * @property String $username
+ * @property String $password
+ * @property String $name
+ * @property int $city
+ */
 class Accounts extends ActiveRecord {
 
-    public function __construct($className=__CLASS__) {
-        parent::__construct();
-        class_parents($className);
+    public function __construct($datamodel = []) {
+        parent::__construct($datamodel);
     }
 
     public function tableName() {
@@ -18,14 +26,19 @@ class Accounts extends ActiveRecord {
             ['id', ['required', 'int', 'auto_increment']],
             ['username', ['required', 'string', 'max_length' => 80, 'validateUsername']],
             ['password', ['required', 'max_length' => 16]],
-            ['name', 'required'],
-            ['created_at', 'required']
+            ['name', ['required']],
+            ['created_at', ['nullable', 'default' => '@CURRENT_TIMESTAMP']],
+            ['city', ['nullable']],
+            ['photo', ['nullable']]
         );
     }
 
     public function rules() {
         return array(
-            'primary_key' => 'id'
+            'primary_key' => 'id',
+            'belongs_to' => [
+                'city@id' => 'city'
+            ]
         );
     }
 
