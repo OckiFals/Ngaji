@@ -54,7 +54,7 @@
                                 <div class="register-box-body">
                                     <p class="login-box-msg">Register a new membership</p>
 
-                                    <?= Html::form_begin('', 'POST', [
+                                    <?php echo Html::form_begin('', 'POST', [
                                         'enctype' => "multipart/form-data",
                                         'id' => "register-form",
                                         'novalidate' => "novalidate"
@@ -75,9 +75,9 @@
                                     <div class="form-group has-feedback">
                                         <select name="city" class="form-control">
                                             <option value="1">-----</option>
-                                            <? foreach ($cities as $city) : ?>
-                                                <option value="<?= $city->id ?>"><?= $city->name ?></option>
-                                            <? endforeach; ?>
+                                            <?php foreach ($cities as $city) : ?>
+                                                <option value="<?= $city->id ?>"><?php echo $city->name ?></option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
                                     <div class="form-group">
@@ -95,7 +95,7 @@
                                         </div>
                                         <!-- /.col -->
                                     </div>
-                                    <?= Html::form_end() ?>
+                                    <?php echo Html::form_end() ?>
                                 </div>
                                 <!-- /.table-responsive -->
                             </div>
@@ -119,7 +119,7 @@
 </div>
 <!-- ./wrapper -->
 <!-- ./wrapper -->
-<?= Html::load('js', 'plugins/validate/jquery.validate.min.js') ?>
+<?php echo Html::load('js', 'plugins/validate/jquery.validate.min.js') ?>
 <script>
     $(function () {
         $("#register-form").validate({

@@ -24,7 +24,7 @@
     <div class="login-logo">
         <a href="#"><b>Mc</b>LOGIN</a>
     </div>
-    <? if (Ngaji\Http\Session::flash()->has('flash-message')) : ?>
+    <?php if (Ngaji\Http\Session::flash()->has('flash-message')) : ?>
         <div class="alert alert-danger alert-dismissable" id="flash-message">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
             <h4><i class="icon fa fa-warning"></i> Alert!</h4>
@@ -37,7 +37,7 @@
                 $('#flash-message').fadeOut('normal');
             }
         </script>
-    <? endif ?>
+    <?php endif ?>
     <div class="login-box-body">
         <p class="login-box-msg">Sign in to start your session</p>
 
