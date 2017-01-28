@@ -18,7 +18,7 @@
         <?php echo Ngaji\view\View::makeHeader() ?>
     </header>
     <!-- Full Width Column -->
-    <div class="content-wrapper">
+    <div class="content-wrapper" style="min-height: 560px">
         <div class="container-fluid">
             <!-- Content Header (Page header) -->
             <section class="content-header">
@@ -56,14 +56,11 @@
 
                     <div class="col-md-12">
                         <div class="box box-info">
+                            <?php echo Html::anchor('/accounts/add', '<iclass="fa fa-plus"></i> Add New', [
+                                'class' => 'btn btn-info btn-sm btn-flat'
+                            ]) ?>
                             <div class="box-header with-border">
                                 <h3 class="box-title">Accounts</h3>
-
-                                <div class="box-tools pull-right">
-                                    <?php echo Html::anchor('/accounts/add', '<iclass="fa fa-plus"></i> Add New', [
-                                        'class' => 'btn btn-info btn-sm btn-flat'
-                                    ]) ?>
-                                </div>
                             </div>
                             <!-- /.box-header -->
                             <div class="box-body">

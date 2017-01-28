@@ -6,7 +6,7 @@
     <?php echo Ngaji\view\View::makeHead() ?>
 </head>
 <!-- ADD THE CLASS layout-top-nav TO REMOVE THE SIDEBAR. -->
-<body class="skin-blue layout-top-nav">
+<body>
 <div class="wrapper">
     <header class="main-header">
         <?php echo Ngaji\view\View::makeHeader() ?>

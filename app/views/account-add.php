@@ -56,25 +56,27 @@
 
                                     <?php echo Html::form_begin('', 'POST', [
                                         'enctype' => "multipart/form-data",
-                                        'id' => "register-form",
-                                        'novalidate' => "novalidate"
+                                        'id' => "register-form"
                                     ])
                                     ?>
                                     <div class="form-group has-feedback">
                                         <span class="glyphicon glyphicon-user form-control-feedback"></span>
-                                        <input type="text" id="name" name="name" class="form-control" placeholder="Full name"/>
+                                        <input type="text" id="name" name="name" class="form-control" placeholder="Full name"
+                                            required/>
                                     </div>
                                     <div class="form-group has-feedback">
                                         <span class="glyphicon glyphicon-user form-control-feedback"></span>
-                                        <input type="text" id="username" name="username" class="form-control" placeholder="Username"/>
+                                        <input type="text" id="username" name="username" class="form-control" placeholder="Username"
+                                            required/>
                                     </div>
                                     <div class="form-group has-feedback">
                                         <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-                                        <input type="password" id="password" class="form-control" placeholder="Password" name="password"/>
+                                        <input type="password" id="password" class="form-control" placeholder="Password"
+                                               required name="password"/>
                                     </div>
                                     <div class="form-group has-feedback">
-                                        <select name="city" class="form-control">
-                                            <option value="1">-----</option>
+                                        <select name="city" class="form-control" required>
+                                            <option value="0">-----</option>
                                             <?php foreach ($cities as $city) : ?>
                                                 <option value="<?= $city->id ?>"><?php echo $city->name ?></option>
                                             <?php endforeach; ?>
@@ -118,37 +120,5 @@
     <?php echo Ngaji\view\View::makeFooter() ?>
 </div>
 <!-- ./wrapper -->
-<!-- ./wrapper -->
-<?php echo Html::load('js', 'plugins/validate/jquery.validate.min.js') ?>
-<script>
-    $(function () {
-        $("#register-form").validate({
-
-            // Specify the validation rules
-            rules: {
-                name: "required",
-                username: "required",
-                password: {
-                    required: true,
-                    minlength: 5
-                }
-            },
-
-            // Specify the validation error messages
-            messages: {
-                name: "Please enter your name",
-                username: "Please enter your username",
-                password: {
-                    required: "Please provide a password",
-                    minlength: "Your password must be at least 5 characters long"
-                }
-            },
-
-            submitHandler: function(form) {
-                form.submit();
-            }
-        });
-    });
-</script>
 </body>
 </html>

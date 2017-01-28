@@ -49,7 +49,7 @@ class AccountsController extends Controller {
                 $account->name = $form->clean_data('name');
                 $account->username = $form->clean_data('username');
                 $account->password = $form->clean_data('password');
-                $account->photo = '2.png';
+                $account->photo = '1.png';
                 $account->city = $form->city;
 
                 $account->save();

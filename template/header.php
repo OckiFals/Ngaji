@@ -2,7 +2,7 @@
 use Ngaji\Http\Request;
 
 ?>
-<nav class="navbar navbar-static-top">
+<nav class="navbar navbar-default">
     <div class="container-fluid">
         <div class="navbar-header">
             <a href="<?php echo HOSTNAME ?>" class="navbar-brand"><b>My</b>Company</a>
@@ -45,68 +45,18 @@ use Ngaji\Http\Request;
                         ]) ?>
                     </li>
                     <li class="dropdown user user-menu">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            <?php echo
-                                # same as <img src="/manajemen_rersto/assets/img/avatar.png" class="user-image" alt="User Image"/>
-                            Html::load('img', '1.png', [
-                                'class' => 'user-image',
-                                'alt' => 'User Image'
-                            ])
-                            ?>
-                            <span class=""><?php echo Request::user('name') ?></span>
+                        <a href="#" cclass="dropdown-toggle" data-toggle="dropdown">
+                            <?php echo Request::user('name') ?>
+                            <span class="caret"></span>
                         </a>
-                        <ul class="dropdown-menu">
-                            <!-- User image -->
-                            <li class="user-header hidden-xs">
-                                <?php echo Html::load('img', '1.png', [
-                                    'class' => 'img-circle',
-                                    'alt' => 'User Image'
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <?php echo Html::anchor('/logout', 'Sign out', [
+                                    'class' => [
+                                        ''
+                                    ]
                                 ])
                                 ?>
-
-                                <p>
-                                    <?php echo Ngaji\Http\Request::user('username') ?>
-                                    <small><?php echo Ngaji\Http\Request::user('type-display') ?></small>
-                                </p>
-                            </li>
-                            <!-- Menu Body -->
-                            <li class="user-body hidden-xs">
-                                <div class="col-xs-4 text-center">
-                                    <a href="#">Followers</a>
-                                </div>
-                                <div class="col-xs-4 text-center">
-                                    <a href="#">Sales</a>
-                                </div>
-                                <div class="col-xs-4 text-center">
-                                    <a href="#">Friends</a>
-                                </div>
-                            </li>
-                            <!-- Menu Footer-->
-                            <li class="user-footer hidden-xs">
-                                <div class="pull-left">
-                                    <?php echo Html::anchor('#', 'Profile', [
-                                        'class' => [
-                                            'btn',
-                                            'btn-default',
-                                            'btn-flat'
-                                        ]
-                                    ])
-                                    ?>
-                                </div>
-                                <div class="pull-right">
-                                    <?php echo Html::anchor('/logout', 'Sign out', [
-                                        'class' => [
-                                            'btn',
-                                            'btn-default',
-                                            'btn-flat'
-                                        ]
-                                    ])
-                                    ?>
-                                </div>
-                            </li>
-
-                            <li class="hidden-lg hidden-md hidden-sm">
-                                <?php echo Html::anchor('#', 'Profile') ?>
                             </li>
                             <li class="hidden-lg hidden-md hidden-sm">
                                 <?php echo Html::anchor('/logout', 'Logout') ?>
@@ -116,9 +66,9 @@ use Ngaji\Http\Request;
                 <?php else: ?>
                     <!-- for guest -->
                     <li>
-                        <?php echo Html::anchor('/login', '<span class="glyphicon glyphicon-user"> Login</span>', [
-                            'class' => 'dropdown-toggle btn bg-olive btn-flat'
-                        ]) ?>
+                        <?php echo Html::anchor('/login',
+                            '<span class="glyphicon glyphicon-user"> Login</span>'
+                        ) ?>
                     </li>
                 <?php endif; ?>
             </ul>

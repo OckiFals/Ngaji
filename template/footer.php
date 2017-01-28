@@ -10,11 +10,9 @@
 </footer>
 
 <!-- jQuery 2.1.3 -->
-<?php echo Html::load('js', 'plugins/jQuery/jQuery-2.1.3.min.js') ?>
+<?php echo Html::load('js', 'jquery.min.js') ?>
 <!-- Bootstrap 3.3.2 JS -->
 <?php echo Html::load('js', 'bootstrap.min.js') ?>
-<!-- AdminLTE App -->
-<?php echo Html::load('js', 'dist/app.min.js') ?>
 
 
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
