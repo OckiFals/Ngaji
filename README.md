@@ -6,9 +6,9 @@ Requirement:
 + AllowOverride All in apache.conf
 + short_open_tag=On in php.ini
 
-# Manual penggunaan:
+## Manual penggunaan:
 
-###1. Definisikan web-app path(optional)**
+### 1. Definisikan web-app path(optional)**
 
 
    contoh: asumsikan url path untuk project adalah http://ockifals.dev/bisangaji
@@ -22,7 +22,7 @@ Requirement:
    Oleh karenanya mendefinisikan web-app path tidak lagi menjadi suatu keharusan(optional).
    
    
-###2. Ubah dan sesuaikan konfigurasi pada app/setting.php
+### 2. Ubah dan sesuaikan konfigurasi pada app/setting.php
 
 File tersebut merupakan konfigurasi fundamental yang dimuat ketika aplikasi web dijalankan.
 
@@ -87,7 +87,7 @@ class ControllerName extends Controller {
 ```
 	
 	
-###3. Sesuaikan route
+### 3. Sesuaikan route
    Ngaji/Routing/Route.php merupakan class yang bertugas mengarahkan request dari client. 
    Request tersebut akan ditentukan jalurnya dengan memanggil controller yang sesuai.
 
@@ -129,11 +129,11 @@ class ControllerName extends Controller {
 
    1. require digunakan untuk memverifikasi pola URI yang dibutuhkan
 
-   'require' => ['parameter' => 'pola preg_match']
+   `'require' => ['parameter' => 'pola preg_match']`
 
    2. default mendefinisikan nilai default dari parameter, jika parameter tidak didefinisikan
 
-   'default' => ['parameter' => nilai]
+   `'default' => ['parameter' => nilai]`
 
    Contoh:
 
@@ -151,8 +151,7 @@ $mux->add("/test/:id", 'app\controllers\ApplicationController:test'], [
       
       Contoh prefix `id` dengan filter '\d+'(integer)
 
-
-    ### Methods
+### Methods
 
     - `Mux->add( {path}, {callback array or callable object}, { route options })`
     - `Mux->post( {path}, {callback array or callable object}, { route options })`
@@ -168,7 +167,7 @@ $mux->add("/test/:id", 'app\controllers\ApplicationController:test'], [
     - `Mux::__set_state({object member array})` constructs and returns a Mux object.
 
 
-###4. Bekerja dengan Html helpers
+### 4. Bekerja dengan Html helpers
 
    Html::Load()
    ------------
@@ -245,7 +244,7 @@ $mux->add("/test/:id", 'app\controllers\ApplicationController:test'], [
 
   `<a href="/[hostname-app]/login" class="btn btn-default btn-flat">Login Disini</a>`
 
-###5. Bekerja dengan database
+### 5. Bekerja dengan database
 
    Model::all()
    ------------
@@ -265,64 +264,68 @@ class Example extend Controller{
    ----------------
    Mengambil satu baris data dengan criteria atau tanpa criteria
 	
-	**5.2.1 Mengambil satu data teratas**
+Mengambil satu data teratas**
 
-	```php
-	$data = Ustadz::findOne();
-	```
+```php
+$data = Ustadz::findOne();
+```
 	
-	**5.2.2 Mencari berdasarkan primary key**
-	```php
-	$data = Ustadz::findOne(2);
-	```
+Mencari berdasarkan primary key**
 	
-	**5.2.2 Mencari berdasarkan kriteria nilai tertentu**
-	```php
-	$data = Ustadz::findOne([
-		'username' => 'subali'
-	]);
-	```
+```php
+$data = Ustadz::findOne(2);
+```
 	
-   **5.3 `Model::findAll()`**
+Mencari berdasarkan kriteria nilai tertentu**
+	
+```php
+$data = Ustadz::findOne([
+	'username' => 'subali'
+]);
+```
+	
+   Model::findAll()
+   -----------------
 
-	Mengambil seluruh baris data dengan criteria atau tanpa criteria
+Mengambil seluruh baris data dengan criteria atau tanpa criteria
 	
-	**5.3.1 Mencari berdasarkan kriteria nilai tertentu**
-	```php
-	$data = Ustadz::findAll([
-		'type` => 1,
-		'active' => 1
-	]);
-	```
-
-	Setara dengan:
+Mencari berdasarkan kriteria nilai tertentu**
 	
-	```sql
-	SELECT ... FROM ... WHERE `type`=1 AND `active`=1
-	```
+```php
+$data = Ustadz::findAll([
+	'type` => 1,
+	'active' => 1
+]);
+```
+
+Setara dengan:
 	
-	```php
-	$data = Ustadz::findAll([
-		'type` => 1,
-		'active' => [
-			'!=` => 1
-		]
-	]);
-	```
-
-	Setara dengan:
-
-	```sql
-	SELECT ... FROM ... WHERE `type`=1 AND `active`!=1
-	```
+```sql
+SELECT ... FROM ... WHERE `type`=1 AND `active`=1
+```
 	
-	**5.2.2 Mencari berdasarkan kriteria nilai tertentu**
-	```php
-	$data = Ustadz::findOne([
-		'username' => 'subali'
-	]);
-	```
+```php
+$data = Ustadz::findAll([
+	'type` => 1,
+	'active' => [
+		'!=` => 1
+	]
+]);
+```
 
-	Menyimpan record baru
-	----------------------
+Setara dengan:
+
+```sql
+SELECT ... FROM ... WHERE `type`=1 AND `active`!=1
+```
+
+Mencari berdasarkan kriteria nilai tertentu**
+```php
+$data = Ustadz::findOne([
+	'username' => 'subali'
+]);
+```
+
+Menyimpan record baru
+----------------------
 	
